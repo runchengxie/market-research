@@ -6,7 +6,13 @@ import tomllib
 from pathlib import Path
 
 from .markets import build_a_share_panel, build_hk_panel, build_jp_panel, build_us_panel
-from .indexes import build_nav, build_underwater_periods, reconstruct_smallest_cap_index, summarize_nav
+from .indexes import (
+    build_nav,
+    build_underwater_periods,
+    reconstruct_smallest_cap_index,
+    reconstruct_smallest_cap_index_from_parquet,
+    summarize_nav,
+)
 from .reports import build_liquidity_report, write_report_bundle
 
 
@@ -52,12 +58,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "report" and args.report_command == "microcap":
         config = _load_config(Path(args.config))
-        panels, _ = _build_configured_panels(config)
-        if "a_share" not in panels:
+        sources = config.get("sources", {})
+        a_share_root = Path(str(sources.get("a_share_root", ""))) if isinstance(sources, dict) else Path("")
+        if not a_share_root.exists():
             raise RuntimeError("A-share source is required for microcap report")
         output_root = Path(config.get("output_root", "outputs"))
         output_root.mkdir(parents=True, exist_ok=True)
-        reconstruction = reconstruct_smallest_cap_index(panels["a_share"], constituent_count=400)
+        if bool(config.get("use_duckdb", False)) and a_share_root.is_dir():
+            reconstruction = reconstruct_smallest_cap_index_from_parquet(a_share_root, constituent_count=400)
+        else:
+            panels, _ = _build_configured_panels(config)
+            if "a_share" not in panels:
+                raise RuntimeError("A-share source did not produce a valid panel")
+            reconstruction = reconstruct_smallest_cap_index(panels["a_share"], constituent_count=400)
         nav = build_nav(reconstruction)
         nav.to_csv(output_root / "microcap_nav.csv", index=False)
         build_underwater_periods(nav).to_csv(output_root / "microcap_underwater_periods.csv", index=False)

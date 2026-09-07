@@ -42,6 +42,89 @@ def reconstruct_smallest_cap_index(
     return _calculate_returns(selected, result)
 
 
+def reconstruct_smallest_cap_index_from_parquet(
+    data_root: str | object, constituent_count: int = 400,
+    start_date: str | None = None, end_date: str | None = None,
+) -> pd.DataFrame:
+    """Run the A-share reconstruction inside DuckDB for large Parquet roots."""
+    try:
+        import duckdb
+    except ImportError as exc:
+        raise RuntimeError("DuckDB is required for parquet index reconstruction") from exc
+    from pathlib import Path
+
+    root = Path(data_root)
+    pattern = str(root / "**" / "*.parquet")
+    filters = ["trade_date IS NOT NULL", "adj_close > 0", "total_mv > 0"]
+    parameters: list[object] = [pattern]
+    if start_date is not None:
+        filters.append("try_cast(trade_date AS DATE) >= CAST(? AS DATE)")
+        parameters.append(start_date)
+    if end_date is not None:
+        filters.append("try_cast(trade_date AS DATE) <= CAST(? AS DATE)")
+        parameters.append(end_date)
+    parameters.append(constituent_count)
+    query = f"""
+        WITH raw AS (
+            SELECT ts_code, trade_date, CAST(adj_close AS DOUBLE) AS adj_close,
+                   CAST(total_mv AS DOUBLE) AS total_mv,
+                   COALESCE(is_st, false) AS is_st,
+                   COALESCE(is_suspended, false) AS is_suspended
+            FROM (
+                SELECT ts_code,
+                       COALESCE(try_cast(trade_date AS DATE), try_strptime(trade_date, '%Y%m%d')) AS trade_date,
+                       adj_close, total_mv, is_st, is_suspended
+                FROM read_parquet(?, union_by_name=true)
+            ) source
+            WHERE {' AND '.join(filters)}
+        ),
+        dates AS (
+            SELECT trade_date,
+                   LEAD(trade_date) OVER (ORDER BY trade_date) AS next_trade_date
+            FROM (SELECT DISTINCT trade_date FROM raw)
+        ),
+        prices AS (
+            SELECT *,
+                   LEAD(trade_date) OVER (PARTITION BY ts_code ORDER BY trade_date) AS next_stock_date,
+                   LEAD(adj_close) OVER (PARTITION BY ts_code ORDER BY trade_date) AS next_adj_close
+            FROM raw
+        ),
+        ranked AS (
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY trade_date ORDER BY total_mv, ts_code) AS rank
+            FROM prices
+            WHERE NOT is_st AND NOT is_suspended
+        ),
+        selected AS (
+            SELECT ranked.*, dates.next_trade_date
+            FROM ranked
+            JOIN dates USING (trade_date)
+            WHERE rank <= ?
+        )
+        SELECT trade_date AS date,
+               AVG(next_adj_close / adj_close - 1) FILTER (
+                   WHERE next_stock_date = next_trade_date AND next_adj_close > 0
+               ) AS return,
+               COUNT(*) AS selected_count,
+               COUNT(*) FILTER (
+                   WHERE next_stock_date = next_trade_date AND next_adj_close > 0
+               ) AS priced_count
+        FROM selected
+        GROUP BY trade_date
+        HAVING COUNT(*) FILTER (
+                   WHERE next_stock_date = next_trade_date AND next_adj_close > 0
+               ) > 0
+        ORDER BY trade_date
+    """
+    connection = duckdb.connect()
+    try:
+        result = connection.execute(query, parameters).fetchdf()
+        if not result.empty:
+            result["date"] = pd.to_datetime(result["date"]).dt.date
+        return result
+    finally:
+        connection.close()
+
+
 def _calculate_returns(selected: pd.DataFrame, result: pd.DataFrame) -> pd.DataFrame:
     valid = selected.loc[selected["valid_next"]].copy()
     valid["daily_return"] = valid["next_adj_close"] / valid["adj_close"] - 1

@@ -45,3 +45,27 @@ def test_summarize_nav_reports_underwater_episode():
 
     assert len(episodes) == 1
     assert summary["max_drawdown"] == pytest.approx(-0.2)
+
+
+def test_reconstruct_smallest_cap_index_from_parquet(tmp_path):
+    pytest.importorskip("duckdb")
+    from market_research.indexes import reconstruct_smallest_cap_index_from_parquet
+
+    for symbol, values in {
+        "000001.SZ": [("2026-01-01", 10.0), ("2026-01-02", 11.0)],
+        "000002.SZ": [("2026-01-01", 20.0), ("2026-01-02", 20.0)],
+    }.items():
+        pd.DataFrame(
+            {
+                "ts_code": [symbol, symbol],
+                "trade_date": [date for date, _ in values],
+                "adj_close": [close for _, close in values],
+                "total_mv": [100.0 if symbol.startswith("000001") else 200.0] * 2,
+                "is_st": [False, False],
+                "is_suspended": [False, False],
+            }
+        ).to_parquet(tmp_path / f"{symbol}.parquet")
+
+    result = reconstruct_smallest_cap_index_from_parquet(tmp_path, constituent_count=1)
+
+    assert result.loc[0, "return"] == pytest.approx(0.1)
