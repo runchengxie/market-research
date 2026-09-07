@@ -25,5 +25,11 @@ Known local data roots include:
 - US: `/mnt/data/cold4t/simfin`
 - JP: `/mnt/data/cold4t/nira/current/guan-japanese-nira/data`
 
+The JP adapter currently consumes only `daily/*/equities_bars_daily_*.parquet`.
+It maps J-Quants `Date`, `Code`, `C`, `Vo`, and `Va` to the canonical panel.
+The current nira snapshot does not provide a paired daily market-cap field, so
+JP reports mark market-cap-dependent analysis as incomplete until that source
+is added.
+
 The architecture and migration scope are documented in
 `docs/superpowers/specs/2026-09-07-market-research-design.md`.
