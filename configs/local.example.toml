@@ -1,0 +1,10 @@
+output_root = "outputs"
+as_of = ""
+
+[sources]
+a_share_root = "/home/richard/data/market-data-platform/assets/tushare/a_share"
+hk_daily_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/daily"
+hk_valuation_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/valuation"
+hk_instruments_path = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/instruments"
+us_shareprices_path = "/mnt/data/cold4t/simfin/us"
+jp_root = "/mnt/data/cold4t/nira/current/guan-japanese-nira/data"

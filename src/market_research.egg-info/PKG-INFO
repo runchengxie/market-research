@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: market-research
+Version: 0.1.0
+Summary: Cross-market equity research, liquidity, capacity, and index replication framework
+Requires-Python: >=3.11
+Requires-Dist: pandas>=2.2
+Requires-Dist: pyarrow>=17
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Provides-Extra: duckdb
+Requires-Dist: duckdb>=1.1; extra == "duckdb"

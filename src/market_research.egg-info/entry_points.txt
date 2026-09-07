@@ -1,0 +1,2 @@
+[console_scripts]
+market-research = market_research.cli:main

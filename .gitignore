@@ -1,0 +1,13 @@
+configs/local.toml
+outputs/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.parquet
+*.csv
+*.csv.gz
+*.tar
+*.tar.zst
+*.zip
