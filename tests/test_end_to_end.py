@@ -58,3 +58,4 @@ def test_microcap_report_command_writes_reconstruction_outputs(tmp_path: Path):
     assert main(["report", "microcap", "--config", str(config)]) == 0
     assert (output / "microcap_nav.csv").exists()
     assert (output / "microcap_summary.json").exists()
+    assert len(pd.read_csv(output / "microcap_nav.csv")) == 1

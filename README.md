@@ -33,3 +33,6 @@ is added.
 
 The architecture and migration scope are documented in
 `docs/superpowers/specs/2026-09-07-market-research-design.md`.
+
+The first report bundle contains a liquidity summary, coverage diagnostics,
+lagged liquidity-based mechanical capacity surface, and provenance metadata.
