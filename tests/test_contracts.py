@@ -44,6 +44,7 @@ def test_normalize_panel_orders_columns_and_dates():
 
     assert list(result.columns) == list(CANONICAL_COLUMNS)
     assert result.loc[0, "date"] == date(2026, 1, 1)
+    assert pd.isna(result.loc[0, "adj_close"])
     assert metadata.currency == "CNY"
 
 

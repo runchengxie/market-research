@@ -12,6 +12,7 @@ CANONICAL_COLUMNS: Final[tuple[str, ...]] = (
     "symbol",
     "date",
     "close",
+    "adj_close",
     "volume",
     "turnover",
     "market_cap",
@@ -32,6 +33,9 @@ REQUIRED_METADATA_FIELDS: Final[tuple[str, ...]] = (
     "coverage_end",
     "calendar_mode",
     "quality_status",
+)
+REQUIRED_PANEL_COLUMNS: Final[tuple[str, ...]] = tuple(
+    column for column in CANONICAL_COLUMNS if column != "adj_close"
 )
 
 
@@ -54,7 +58,7 @@ class PanelMetadata:
 
 def validate_panel(frame: pd.DataFrame) -> list[str]:
     issues: list[str] = []
-    missing = [column for column in CANONICAL_COLUMNS if column not in frame.columns]
+    missing = [column for column in REQUIRED_PANEL_COLUMNS if column not in frame.columns]
     if missing:
         issues.append("missing_columns:" + ",".join(missing))
         return issues
@@ -77,8 +81,10 @@ def normalize_panel(frame: pd.DataFrame, metadata: PanelMetadata) -> tuple[pd.Da
     if missing:
         raise ValueError("missing metadata: " + ",".join(missing))
     result = frame.copy()
+    if "adj_close" not in result.columns:
+        result["adj_close"] = pd.NA
     result["date"] = pd.to_datetime(result["date"], errors="raise").dt.date
-    for column in ("close", "volume", "turnover", "market_cap"):
+    for column in ("close", "adj_close", "volume", "turnover", "market_cap"):
         result[column] = pd.to_numeric(result[column], errors="coerce")
     issues = validate_panel(result)
     if issues:
