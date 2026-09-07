@@ -11,7 +11,8 @@ def build_a_share_panel(
     data_root: Path, as_of: str | None = None, fx_rate: float | None = None
 ) -> tuple[pd.DataFrame, PanelMetadata]:
     rows: list[pd.DataFrame] = []
-    sources = sorted(Path(data_root).rglob("*.parquet"))
+    root = Path(data_root)
+    sources = [root] if root.is_file() else sorted(root.rglob("*.parquet"))
     for source in sources:
         frame = pd.read_parquet(source)
         required = {"trade_date", "amount", "total_mv", "is_st", "is_suspended"}
@@ -20,6 +21,9 @@ def build_a_share_panel(
         frame["date"] = pd.to_datetime(frame["trade_date"], errors="coerce").dt.date
         frame["amount"] = pd.to_numeric(frame["amount"], errors="coerce")
         frame["total_mv"] = pd.to_numeric(frame["total_mv"], errors="coerce")
+        frame["close"] = pd.to_numeric(frame.get("close"), errors="coerce")
+        frame["adj_close"] = pd.to_numeric(frame.get("adj_close"), errors="coerce")
+        frame["vol"] = pd.to_numeric(frame.get("vol"), errors="coerce")
         eligible = frame.loc[
             frame["date"].notna()
             & (frame["amount"] > 0)
@@ -37,8 +41,9 @@ def build_a_share_panel(
                     "market": "a_share",
                     "symbol": source.stem,
                     "date": eligible["date"],
-                    "close": pd.NA,
-                    "volume": pd.NA,
+                    "close": eligible["close"],
+                    "adj_close": eligible["adj_close"],
+                    "volume": eligible["vol"],
                     "turnover": eligible["amount"] * 1_000,
                     "market_cap": eligible["total_mv"] * 10_000,
                     "currency": "CNY",
