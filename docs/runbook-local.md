@@ -9,6 +9,8 @@ cp configs/local.example.toml configs/local.toml
 
 Edit `configs/local.toml` so each source points to an existing local data root.
 The file is ignored by Git because the paths are machine-specific.
+Set `use_duckdb = true` for large A-share Parquet directories and install the
+optional DuckDB dependency with `uv sync --extra duckdb`.
 
 ## Validate configured roots
 

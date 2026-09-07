@@ -107,7 +107,11 @@ def _build_configured_panels(config: dict[str, object]):
     panels = {}
     metadata = {}
     if sources.get("a_share_root") and Path(str(sources["a_share_root"])).exists():
-        panels["a_share"], metadata["a_share"] = build_a_share_panel(Path(str(sources["a_share_root"])), as_of)
+        panels["a_share"], metadata["a_share"] = build_a_share_panel(
+            Path(str(sources["a_share_root"])),
+            as_of,
+            use_duckdb=bool(config.get("use_duckdb", False)),
+        )
     if (
         sources.get("hk_daily_root")
         and sources.get("hk_valuation_root")

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 
 def test_a_share_adapter_converts_units_and_filters(tmp_path: Path):
@@ -43,3 +44,21 @@ def test_a_share_adapter_accepts_one_parquet_file(tmp_path: Path):
     panel, _ = build_a_share_panel(source)
 
     assert len(panel) == 1
+
+
+def test_a_share_adapter_can_scan_directory_with_duckdb(tmp_path: Path):
+    pytest.importorskip("duckdb")
+    from market_research.markets.a_share import build_a_share_panel
+
+    for symbol, close in [("000001.SZ", 10.0), ("000002.SZ", 20.0)]:
+        pd.DataFrame(
+            {
+                "ts_code": [symbol], "trade_date": ["2026-01-01"], "close": [close],
+                "adj_close": [close], "vol": [100.0], "amount": [1000.0],
+                "total_mv": [5000.0], "is_st": [False], "is_suspended": [False],
+            }
+        ).to_parquet(tmp_path / f"{symbol}.parquet")
+
+    panel, _ = build_a_share_panel(tmp_path, use_duckdb=True)
+
+    assert set(panel["symbol"]) == {"000001.SZ", "000002.SZ"}

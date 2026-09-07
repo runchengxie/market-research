@@ -1,5 +1,6 @@
 output_root = "outputs"
 as_of = ""
+use_duckdb = true
 
 [sources]
 a_share_root = "/home/richard/data/market-data-platform/assets/tushare/a_share"
