@@ -52,9 +52,9 @@
     }
   ],
   "periods": [
-    {"period": "2020-2024", "status": "incomplete", "common_start": null, "common_end": null, "markets": []},
-    {"period": "2025", "status": "incomplete", "common_start": null, "common_end": null, "markets": []},
-    {"period": "2026 YTD", "status": "incomplete", "common_start": null, "common_end": null, "markets": []}
+    {"period": "2020-2024", "status": "pending", "common_start": null, "common_end": null, "markets": []},
+    {"period": "2025", "status": "pending", "common_start": null, "common_end": null, "markets": []},
+    {"period": "2026 YTD", "status": "pending", "common_start": null, "common_end": null, "markets": []}
   ],
   "caveats": [
     "A 股日频数据没有记录被省略的停牌日，因此无法仅凭零成交量频率推断停牌情况。",

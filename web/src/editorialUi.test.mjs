@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 const source = readFileSync(new URL("./main.tsx", import.meta.url), "utf8");
 const charts = readFileSync(new URL("./components/MicrocapCharts.tsx", import.meta.url), "utf8");
+const researchCharts = readFileSync(new URL("./components/ResearchCharts.tsx", import.meta.url), "utf8");
 
 test("微盘页面保留旧版研究阅读顺序和图表组件", () => {
   assert.match(source, /MicrocapCharts/);
@@ -42,4 +43,9 @@ test("研究总览使用三个研究域和小微盘子主题", () => {
   assert.match(source, /时间窗口/);
   assert.match(source, /各市场最近可用快照/);
   assert.doesNotMatch(source, /跨市场研究中/);
+});
+
+test("收益图表为缺失值保留 N/A 标记", () => {
+  assert.match(researchCharts, /N\/A/);
+  assert.match(source, /当前窗口没有对应回报口径的数据/);
 });

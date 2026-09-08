@@ -14,7 +14,7 @@ test("publishes the migrated cross-market liquidity snapshot", () => {
   assert.deepEqual(summary.markets.map((market) => market.as_of), ["2025-10-03", "2026-05-26", "2026-09-07"]);
   assert.ok(summary.markets.every((market) => market.buckets.length >= 4));
   assert.deepEqual(summary.periods.map((period) => period.period), ["2020-2024", "2025", "2026 YTD"]);
-  assert.ok(summary.periods.every((period) => ["verified", "incomplete"].includes(period.status)));
+  assert.ok(summary.periods.every((period) => ["verified", "incomplete", "pending"].includes(period.status)));
 });
 
 test("publishes the Barra market-evidence snapshot", () => {

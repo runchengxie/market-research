@@ -336,5 +336,6 @@ def _build_configured_panels(config: dict[str, object]):
     if sources.get("us_shareprices_path") and Path(str(sources["us_shareprices_path"])).exists():
         panels["us"], metadata["us"] = build_us_panel(Path(str(sources["us_shareprices_path"])), as_of)
     if sources.get("jp_root") and Path(str(sources["jp_root"])).exists():
-        panels["jp"], metadata["jp"] = build_jp_panel(Path(str(sources["jp_root"])), as_of)
+        market_cap_path = Path(str(sources["jp_market_cap_path"])) if sources.get("jp_market_cap_path") else None
+        panels["jp"], metadata["jp"] = build_jp_panel(Path(str(sources["jp_root"])), as_of, market_cap_path=market_cap_path)
     return panels, metadata
