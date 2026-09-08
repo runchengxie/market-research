@@ -1,0 +1,73 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: latest
+          python-version: "3.11"
+          enable-cache: false
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Run Python tests
+        run: uv run --extra duckdb --with pytest pytest -q
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build dashboard
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run build
+          touch dist/.nojekyll
+
+      - name: Scan public output for local paths and secrets
+        run: |
+          if rg -n '/home/|/Users/|/mnt/|TUSHARE_TOKEN=|API_KEY=|SECRET_KEY=' web/dist; then
+            echo 'Public output contains a forbidden local path or credential marker.'
+            exit 1
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

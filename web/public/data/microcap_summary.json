@@ -1,0 +1,14 @@
+{
+  "source_label": "market-research A-share rule reconstruction",
+  "method": "smallest 400 by market cap, equal weight, next market day return",
+  "observations": 2838,
+  "max_drawdown": -0.5127186139467239,
+  "longest_underwater_trading_days": 317,
+  "longest_underwater_start": "2017-11-13",
+  "longest_underwater_end": "2019-03-04",
+  "underwater_episode_count": 149,
+  "caveats": [
+    "Research reconstruction, not Wind 8841431.WI official index.",
+    "No transaction costs, limit handling, or strategy capacity simulation."
+  ]
+}

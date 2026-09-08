@@ -36,3 +36,19 @@ The architecture and migration scope are documented in
 
 The first report bundle contains a liquidity summary, coverage diagnostics,
 lagged liquidity-based mechanical capacity surface, and provenance metadata.
+
+## GitHub Pages
+
+The public research snapshot is built from derived files only. It does not
+publish raw market data, machine-specific paths, or credentials. To run the
+dashboard locally:
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Pushing to `main` runs the web tests and build, then deploys the static site to
+`https://runchengxie.github.io/market-research/` when GitHub Pages is enabled
+with the GitHub Actions source.

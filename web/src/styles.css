@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@500;600;700&display=swap');
+
+:root { font-family: Manrope, "Noto Sans SC", sans-serif; color: #252525; background: #f4f0e8; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #f4f0e8; }
+button, a { font: inherit; }
+.app { min-height: 100vh; }
+.site-header { border-bottom: 1px solid #d8d0c3; background: rgba(244,240,232,.94); }
+.site-masthead, .site-main, .site-footer { width: min(1180px, calc(100% - 40px)); margin: auto; }
+.site-masthead { display: flex; justify-content: space-between; gap: 32px; padding: 42px 0 30px; }
+.brand-kicker, .section-kicker { color: #b64d33; font: 500 11px/1.3 "DM Mono", monospace; letter-spacing: .12em; text-transform: uppercase; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", serif; letter-spacing: -.06em; }
+.site-deck { max-width: 600px; margin-bottom: 0; color: #716c63; font-size: 16px; }
+.site-meta { align-self: end; min-width: 160px; color: #887f73; font: 11px/1.7 "DM Mono", monospace; text-align: right; text-transform: uppercase; }
+.site-meta strong { display: block; color: #252525; font-weight: 500; }
+.site-nav { display: flex; gap: 24px; width: min(1180px, calc(100% - 40px)); margin: auto; }
+.site-nav button { border: 0; border-bottom: 2px solid transparent; padding: 13px 0 16px; color: #81796e; background: transparent; cursor: pointer; font-size: 13px; }
+.site-nav button.active { border-color: #c84b2f; color: #252525; font-weight: 700; }
+.site-main { padding: 64px 0 90px; }
+.theme-heading { display: flex; justify-content: space-between; gap: 28px; border-bottom: 1px solid #d8d0c3; padding-bottom: 32px; }
+.theme-heading h2 { max-width: 760px; margin: 10px 0 10px; font: 600 clamp(25px, 3vw, 43px)/1.14 "Noto Serif SC", serif; letter-spacing: -.04em; }
+.theme-heading p { max-width: 740px; margin-bottom: 0; color: #716c63; line-height: 1.8; }
+.asof { white-space: nowrap; color: #8a8176; font: 11px "DM Mono", monospace; }
+.stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; margin: 32px 0; border: 1px solid #d8d0c3; background: #d8d0c3; }
+.stat { min-height: 142px; padding: 20px; background: #f4f0e8; }
+.stat.accent { background: #e8d9c8; }
+.stat span, .stat small { display: block; color: #81796e; font-size: 11px; }
+.stat strong { display: block; margin: 18px 0 8px; font: 700 clamp(22px, 3vw, 32px) "DM Mono", monospace; letter-spacing: -.05em; }
+.stat small { line-height: 1.5; }
+.callout { margin: 32px 0 54px; border-left: 3px solid #c84b2f; padding: 17px 22px; background: #ede5d9; }
+.callout p { max-width: 860px; margin: 9px 0 0; color: #514b43; line-height: 1.8; }
+.section-heading { margin: 52px 0 18px; }
+.section-heading h3 { margin-bottom: 5px; font: 600 24px "Noto Serif SC", serif; }
+.section-heading p, .panel-note { color: #81796e; font-size: 13px; line-height: 1.7; }
+.panel { margin: 18px 0; border: 1px solid #d8d0c3; padding: 22px; background: #f8f5ef; }
+.panel-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.panel-title h3 { margin: 0; font: 600 18px "Noto Serif SC", serif; }
+.tag { border: 1px solid #d8d0c3; padding: 5px 8px; color: #81796e; font: 10px "DM Mono", monospace; }
+.tag.warm { border-color: #dba58f; color: #b64d33; }
+.chart { height: 360px; padding-top: 16px; }
+.chart svg { display: block; width: 100%; height: calc(100% - 30px); overflow: visible; }
+.chart-axis { display: flex; justify-content: space-between; padding-top: 10px; color: #8d8579; font: 10px "DM Mono", monospace; }
+.chart-axis strong { color: #b64d33; font-weight: 500; }
+.research-grid, .market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+.research-card, .market-card { border-top: 2px solid #252525; padding: 18px 0; }
+.research-card h3 { margin: 10px 0 8px; font: 600 19px "Noto Serif SC", serif; }
+.research-card p, .market-card small { margin: 0; color: #716c63; font-size: 13px; line-height: 1.8; }
+.market-grid { grid-template-columns: repeat(4, 1fr); margin: 42px 0; }
+.market-card { padding: 18px; border: 1px solid #d8d0c3; background: #f8f5ef; }
+.market-card span, .market-card strong, .market-card small { display: block; }
+.market-card span { color: #81796e; font: 11px "DM Mono", monospace; }
+.market-card strong { margin: 25px 0 10px; font: 600 21px "Noto Serif SC", serif; }
+.market-card strong.ready { color: #b64d33; }
+.market-card strong.pending { color: #81796e; }
+.loading, .load-error { padding: 80px 0; color: #81796e; }
+.load-error { color: #b64d33; }
+.site-footer { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #d8d0c3; padding: 22px 0 36px; color: #8d8579; font: 11px "DM Mono", monospace; }
+.site-footer a { color: #b64d33; text-decoration: none; }
+@media (max-width: 800px) { .site-masthead, .theme-heading { display: block; } .site-meta { margin-top: 22px; text-align: left; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .stat:last-child { grid-column: span 2; } .research-grid, .market-grid { grid-template-columns: 1fr; } .asof { display: block; margin-top: 18px; } }
+@media (max-width: 480px) { .site-masthead, .site-main, .site-footer, .site-nav { width: min(100% - 28px, 1180px); } .site-main { padding-top: 42px; } .site-nav { gap: 15px; overflow-x: auto; } .stat-grid { grid-template-columns: 1fr; } .stat:last-child { grid-column: auto; } .site-footer { display: block; } .site-footer a { display: block; margin-top: 10px; } }
