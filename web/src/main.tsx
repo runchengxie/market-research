@@ -5,9 +5,13 @@ import { AnnualChart, MetricChart, NavChart, UnderwaterChart } from "./component
 
 type Row = Record<string, string>;
 type MicrocapSummary = { metrics: { ytd_2026_as_of?: string; ytd_2026_reference?: string }; caveats?: string[] };
-type Tab = "overview" | "microcap" | "indices" | "cashflow" | "liquidity";
+type Tab = "overview" | "microcap" | "style" | "cashflow" | "cross-market" | "indices" | "liquidity";
+type MicrocapScope = "a-share" | "cross-market";
 type Series = { name: string; values: number[]; color: string };
-type LiquiditySummary = { method: { roll_days: number; metric: string; currency: string; source_project: string }; markets: { market: string; eligible_stocks: number; sub_100m_count: number; sub_100m_median_usd: number; buckets: { label: string; count: number; median_usd: number; mean_usd: number; p90_usd?: number }[] }[]; caveats: string[] };
+type LiquidityBucket = { label: string; count?: number; median_usd: number; mean_usd: number; p90_usd?: number; observations?: number };
+type LiquidityPeriodMarket = { market: string; status: string; coverage_start?: string; coverage_end?: string; sub_100m_count?: number; sub_100m_median_usd?: number; buckets: LiquidityBucket[] };
+type LiquidityPeriod = { period: string; status: string; common_start?: string | null; common_end?: string | null; markets: LiquidityPeriodMarket[] };
+type LiquiditySummary = { method: { roll_days: number; metric: string; currency: string; source_project: string }; markets: LiquidityPeriodMarket[]; periods?: LiquidityPeriod[]; caveats: string[] };
 
 const DATA = "./data";
 const pct = (value: number | null | undefined) => value == null || Number.isNaN(value) ? "—" : `${(value * 100).toFixed(1)}%`;
@@ -78,8 +82,13 @@ function BarChart({ rows, labelKey, valueKey, color = "#c84b2f", formatter = pct
 
 function ControlBar({ children }: { children: React.ReactNode }) { return <div className="control-bar">{children}</div>; }
 function Choice({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) { return <button className={`choice ${active ? "active" : ""}`} onClick={onClick}>{children}</button>; }
+function MicrocapSubTabs({ scope, onChange }: { scope: MicrocapScope; onChange: (value: MicrocapScope) => void }) { return <div className="sub-tabs" aria-label="小微盘研究子主题"><button className={scope === "a-share" ? "active" : ""} onClick={() => onChange("a-share")}>A股小微盘</button><button className={scope === "cross-market" ? "active" : ""} onClick={() => onChange("cross-market")}>跨市场小微盘流动性</button></div>; }
 
-function MicrocapPage() {
+function MicrocapPage({ scope, onScopeChange }: { scope: MicrocapScope; onScopeChange: (value: MicrocapScope) => void }) {
+  return <><MicrocapSubTabs scope={scope} onChange={onScopeChange}/>{scope === "cross-market" ? <LiquidityPage embedded/> : <MicrocapPageContent/>}</>;
+}
+
+function MicrocapPageContent() {
   const { data: summary } = useJson<MicrocapSummary>("index/microcap/summary.json");
   const { data: reconstructed } = useJson<Row>("index/microcap/reconstructed_summary.json");
   const { data: nav } = useCsv("index/microcap/nav.csv");
@@ -123,7 +132,21 @@ function AnimalPage() {
   return <><ThemeHeading kicker="A股动物 / 植物指数 · 规则化观察" title="把主题规则、净值路径和调仓变化放在一起。" text="恢复 a-share-animal-index 的动物与植物两套指数快照，包括严格/扩展口径、基准、历史净值、当前成分和调仓变化。" asof={`截至 ${animalLatest.date}`}/><section className="stat-grid"><Stat label="动物严格口径" value={num(animalLatest.zoo_strict_nav)} note={pct(asNumber(animalLatest.zoo_strict_daily))} accent/><Stat label="动物扩展口径" value={num(animalLatest.zoo_extended_nav)} note={pct(asNumber(animalLatest.zoo_extended_daily))}/><Stat label="植物严格口径" value={num(plantLatest.zoo_strict_nav)} note={pct(asNumber(plantLatest.zoo_strict_daily))}/><Stat label="沪深300 ETF" value={num(animalLatest.benchmark_nav)} note={pct(asNumber(animalLatest.benchmark_daily))}/></section><Panel title="主题指数净值路径" tag="月度调仓"><LineChart labels={[animalHistory[0]?.date ?? "", animalHistory.at(-1)?.date ?? ""]} series={[{ name: "动物严格", values: animalHistory.map((row) => Number(row.zoo_strict_nav)), color: "#c84b2f" }, { name: "动物扩展", values: animalHistory.map((row) => Number(row.zoo_extended_nav)), color: "#1267d6" }, { name: "植物严格", values: plantHistory.map((row) => Number(row.zoo_strict_nav)), color: "#51855f" }]}/></Panel><div className="research-grid"><Panel title="当前动物成分"><SimpleTable rows={animalConstituents.slice(0, 12)} columns={Object.keys(animalConstituents[0] ?? {}).slice(0, 4).map((key) => [key, key])}/></Panel><Panel title="当前植物成分"><SimpleTable rows={plantConstituents.slice(0, 12)} columns={Object.keys(plantConstituents[0] ?? {}).slice(0, 4).map((key) => [key, key])}/></Panel><Panel title="最近调仓变化"><SimpleTable rows={Object.entries(animalChanges).map(([variant, value]) => ({ variant, detail: JSON.stringify(value) }))} columns={[["variant", "口径"], ["detail", "变化"]]}/></Panel></div></>;
 }
 
-function LiquidityPage() {
+function LiquidityPage({ embedded = false }: { embedded?: boolean }) { return <><LiquidityPeriodPanel embedded={embedded}/><LiquidityPageLegacy/></>; }
+
+function LiquidityPeriodPanel({ embedded }: { embedded: boolean }) {
+  const { data: summary } = useJson<LiquiditySummary>("liquidity/summary.json");
+  const [period, setPeriod] = useState("latest");
+  if (!summary) return <Loading />;
+  const options = ["latest", ...(summary.periods ?? []).map((item) => item.period)];
+  const selected = period === "latest" ? null : summary.periods?.find((item) => item.period === period);
+  const markets = selected?.markets ?? summary.markets;
+  const available = markets.filter((item) => item.status !== "incomplete");
+  const periodStatus = selected?.status ?? "verified";
+  return <section className={`period-panel ${embedded ? "embedded" : ""}`}><div className="period-heading"><div><span className="section-kicker">跨市场小微盘流动性</span><h3>不同时间段，比较小市值股票的可交易性</h3><p>按各市场当期市值分桶，使用滞后 20 日平均成交额；不同市场的覆盖和单位差异保留在状态中。</p></div><span className={`status-badge ${periodStatus}`}>{periodStatus === "verified" ? "已验证" : "覆盖不完整"}</span></div><ControlBar><span className="control-label">时间区间</span>{options.map((value) => { const item = value === "latest" ? null : summary.periods?.find((candidate) => candidate.period === value); return <Choice key={value} active={period === value} onClick={() => setPeriod(value)}>{value === "latest" ? "最新" : value}{item?.status === "incomplete" ? " · 不完整" : ""}</Choice>; })}</ControlBar><div className="period-meta">{selected ? `${selected.common_start ?? "—"} 至 ${selected.common_end ?? "—"} · ${available.length}/${markets.length} 个市场可比` : "当前最新快照 · 以页面顶部数据更新时间为准"}</div>{selected && selected.status === "incomplete" && <div className="callout compact"><span className="section-kicker">覆盖提醒</span><p>该区间不是所有市场都有完整共同覆盖，下面只展示可用市场，不把缺失市场补成零。</p></div>}<div className="period-table"><SimpleTable rows={available.flatMap((market) => market.buckets.map((bucket) => ({ market: market.market, bucket: bucket.label, median_usd: `$${num(bucket.median_usd)}`, mean_usd: `$${num(bucket.mean_usd)}`, observations: num(bucket.observations) })))} columns={[["market", "市场"], ["bucket", "市值分位"], ["median_usd", "成交中位"], ["mean_usd", "成交均值"], ["observations", "观测数"]]} /></div></section>;
+}
+
+function LiquidityPageLegacy() {
   const { data: summary } = useJson<LiquiditySummary>("liquidity/summary.json");
   const [market, setMarket] = useState("all");
   const [metric, setMetric] = useState<"median_usd" | "mean_usd" | "p90_usd">("median_usd");
@@ -154,14 +177,16 @@ function SortableTable({ rows, columns, percentColumns = [] }: { rows: Row[]; co
 function Loading() { return <p className="loading">正在加载研究快照……</p>; }
 
 function App() {
-  const validTabs: Tab[] = ["overview", "microcap", "indices", "cashflow", "liquidity"];
+  const validTabs: Tab[] = ["overview", "microcap", "style", "cashflow", "cross-market", "indices", "liquidity"];
   const hash = window.location.hash.slice(1) as Tab;
   const [tab, setTab] = useState<Tab>(validTabs.includes(hash) ? hash : "overview");
+  const [microcapScope, setMicrocapScope] = useState<MicrocapScope>("a-share");
   useEffect(() => { const onHash = () => { const next = window.location.hash.slice(1) as Tab; if (validTabs.includes(next)) setTab(next); }; window.addEventListener("hashchange", onHash); return () => window.removeEventListener("hashchange", onHash); }, []);
-  const page = tab === "microcap" ? <MicrocapPage/> : tab === "indices" ? <IndicesPage/> : tab === "cashflow" ? <CashflowPage/> : tab === "liquidity" ? <LiquidityPage/> : <Overview/>;
-  return <div className="app"><header className="site-header"><div className="site-masthead"><div><span className="brand-kicker">Market Research · 统一研究入口</span><h1>流动性与指数研究</h1><p className="site-deck">集中展示微盘收益、指数产品和跨市场流动性数据。</p></div><div className="site-meta"><span>承接 index-research</span><strong>承接 liquidity profiles</strong></div></div><nav className="site-nav" aria-label="研究主题">{[["overview", "研究总览"], ["microcap", "A股微盘"], ["indices", "指数与ETF"], ["cashflow", "现金流指数"], ["liquidity", "跨市场流动性"]].map(([key, label]) => <a key={key} className={tab === key ? "active" : ""} href={`#${key}`} onClick={() => setTab(key as Tab)}>{label}</a>)}</nav></header><main className="site-main">{page}</main><footer className="site-footer"><span>market-research · 原 index-research / market-liquidity-profiles 的合并研究入口</span><a href="https://github.com/runchengxie/market-research">查看 GitHub 仓库 ↗</a></footer></div>;
+  const page = tab === "microcap" ? <MicrocapPage scope={microcapScope} onScopeChange={setMicrocapScope}/> : tab === "style" || tab === "indices" ? <IndicesPage/> : tab === "cashflow" ? <CashflowPage/> : tab === "cross-market" || tab === "liquidity" ? <LiquidityPage/> : <Overview/>;
+  const navItems: [Tab, string][] = [["overview", "研究总览"], ["cashflow", "现金流策略探索"], ["microcap", "小微盘策略探索"], ["style", "市场长期风格研究"], ["cross-market", "跨市场探索"]];
+  return <div className="app"><header className="site-header"><div className="site-masthead"><div><span className="brand-kicker">Market Research · 统一研究入口</span><h1>市场研究与策略探索</h1><p className="site-deck">从现金流、小微盘、长期风格到跨市场流动性，沿着证据链阅读研究。</p></div><div className="site-meta"><span>4 个研究域</span><strong>原始数据外置 · 证据优先</strong></div></div><nav className="site-nav" aria-label="研究主题">{navItems.map(([key, label]) => <a key={key} className={tab === key || (key === "style" && tab === "indices") || (key === "cross-market" && tab === "liquidity") ? "active" : ""} href={`#${key}`} onClick={() => setTab(key)}>{label}</a>)}</nav></header><main className="site-main">{page}</main><footer className="site-footer"><span>market-research · 统一研究入口</span><a href="https://github.com/runchengxie/market-research">查看 GitHub 仓库 ↗</a></footer></div>;
 }
 
-function Overview() { return <><ThemeHeading kicker="统一研究入口 · 吸收旧项目公开内容" title="从收益路径到可交易性，先看全貌，再钻进单个主题。" text="这个项目现在是 index-research 与 liquidity profiles 的合并入口；原始数据仍保留在本地，页面只发布可复核的派生快照。" asof="公开快照"/><section className="overview-grid"><a href="#microcap"><span className="section-kicker">01 · Index Research</span><h3>A股微盘股</h3><p>公开参考净值、规则重建、年度收益、滚动 CAGR、最大回撤和水下区间。</p><b>进入研究 ↗</b></a><a href="#indices"><span className="section-kicker">02 · Index Research</span><h3>指数与ETF</h3><p>十年指数价格回报、指数目录、ETF代表和流动性筛选结果。</p><b>进入研究 ↗</b></a><a href="#liquidity"><span className="section-kicker">03 · Liquidity Profiles</span><h3>跨市场流动性</h3><p>A股、港股、美股统一面板、滞后特征、容量与质量诊断。</p><b>进入研究 ↗</b></a></section><section className="research-grid"><ResearchCard title="18 年风格因子市场证据" text="已迁入 market-research：观察 size、value、momentum 和 liquidity 的长期分位收益与尾部单调性。IC、decay 和策略选择仍留在 quant-research。"/><ResearchCard title="Global Six-Market Allocation" text="已迁入 market-research：六个 ETF proxy、固定权重、FX、月度再平衡和 paper-shadow 诊断。当前仍是 exploration。"/><ResearchCard title="研究状态优先" text="页面指标旁保留来源、样本区间和限制条件；ETF proxy 不等同于完整国家股票市场，描述性证据不等于策略晋升证据。"/></section><div className="callout"><span className="section-kicker">迁移说明</span><p>旧项目的公开说明和 Pages 会指向这里。旧仓库继续保留历史代码和提交记录，本项目作为统一发布入口。</p></div></>; }
+function Overview() { return <><ThemeHeading kicker="统一研究入口 · 研究目录" title="从收益路径、长期风格到可交易性，沿着证据链阅读。" text="market-research 集中承载市场事实、风格证据和跨市场诊断；原始数据留在本地，页面只发布可复核的派生快照。" asof="公开快照"/><section className="overview-grid"><a href="#cashflow"><span className="section-kicker">01 · 策略探索</span><h3>现金流策略探索</h3><p>观察现金流、股息和调仓频率在不同回报口径与持有窗口下的表现。</p><b>进入研究 ↗</b></a><a href="#microcap"><span className="section-kicker">02 · 规则与流动性</span><h3>小微盘策略探索</h3><p>A股小微盘与跨市场小微盘流动性，分别通过两个子主题阅读。</p><b>进入研究 ↗</b></a><a href="#style"><span className="section-kicker">03 · 市场证据</span><h3>市场长期风格研究</h3><p>指数、ETF、Barra 和 18 年因子研究，放在同一条长期风格证据线上。</p><b>进入研究 ↗</b></a><a href="#cross-market"><span className="section-kicker">04 · 市场结构</span><h3>跨市场探索</h3><p>比较不同市场的流动性、分散化、FX 和 Global Six-Market 研究。</p><b>进入研究 ↗</b></a></section><section className="research-grid"><ResearchCard title="小微盘的两个视角" text="A股页面关注规则重建与收益路径；跨市场子页关注不同市场市值尾部的流动性差异。"/><ResearchCard title="长期风格证据" text="ETF 作为市场代理、指数表现和 18 年因子现象属于市场长期风格研究，不等同于 alpha 策略。"/><ResearchCard title="研究状态优先" text="页面指标旁保留来源、样本区间和限制条件；描述性证据不等于策略晋升证据。"/></section><div className="callout"><span className="section-kicker">研究边界</span><p>策略探索、市场证据和通用平台能力分开维护；原始行情不发布，跨市场比较不把缺失市场补成零。</p></div></>; }
 
 createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);

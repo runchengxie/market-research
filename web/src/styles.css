@@ -15,8 +15,9 @@ h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", 
 .site-meta { align-self: end; min-width: 160px; color: #887f73; font: 11px/1.7 "DM Mono", monospace; text-align: right; text-transform: uppercase; }
 .site-meta strong { display: block; color: #252525; font-weight: 500; }
 .site-nav { display: flex; gap: 24px; width: min(1180px, calc(100% - 40px)); margin: auto; }
-.site-nav button { border: 0; border-bottom: 2px solid transparent; padding: 13px 0 16px; color: #81796e; background: transparent; cursor: pointer; font-size: 13px; }
-.site-nav button.active { border-color: #c84b2f; color: #252525; font-weight: 700; }
+.site-nav a { border-bottom: 2px solid transparent; padding: 13px 0 16px; color: #81796e; cursor: pointer; font-size: 13px; text-decoration: none; transition: color .2s ease, border-color .2s ease; }
+.site-nav a:hover, .site-nav a:focus-visible { color: #252525; border-color: #dba58f; }
+.site-nav a.active { border-color: #c84b2f; color: #252525; font-weight: 700; }
 .site-main { padding: 64px 0 90px; }
 .theme-heading { display: flex; justify-content: space-between; gap: 28px; border-bottom: 1px solid #d8d0c3; padding-bottom: 32px; }
 .theme-heading h2 { max-width: 760px; margin: 10px 0 10px; font: 600 clamp(25px, 3vw, 43px)/1.14 "Noto Serif SC", serif; letter-spacing: -.04em; }
@@ -49,6 +50,19 @@ h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", 
 .overview-grid h3 { margin: 28px 0 10px; font: 600 25px "Noto Serif SC", serif; }
 .overview-grid p { max-width: 410px; margin-bottom: 22px; color: #716c63; font-size: 13px; line-height: 1.8; }
 .overview-grid b { color: #b64d33; font: 11px "DM Mono", monospace; }
+.sub-tabs { display: flex; gap: 6px; margin: 0 0 24px; border-bottom: 1px solid #d8d0c3; padding-bottom: 10px; }
+.sub-tabs button { border: 1px solid transparent; padding: 8px 12px; color: #81796e; background: transparent; cursor: pointer; font-size: 12px; }
+.sub-tabs button:hover, .sub-tabs button:focus-visible, .sub-tabs button.active { border-color: #dba58f; color: #b64d33; background: #ede5d9; }
+.period-panel { margin: 0 0 42px; border: 1px solid #d8d0c3; padding: 24px; background: #f8f5ef; }
+.period-panel.embedded { margin-top: 10px; }
+.period-heading { display: flex; justify-content: space-between; gap: 20px; align-items: start; }
+.period-heading h3 { margin: 8px 0; font: 600 23px "Noto Serif SC", serif; }
+.period-heading p { max-width: 680px; margin: 0; color: #81796e; font-size: 13px; line-height: 1.7; }
+.status-badge { flex: none; border: 1px solid #d8d0c3; padding: 6px 9px; color: #81796e; font: 10px "DM Mono", monospace; }
+.status-badge.verified { border-color: #a9c8ae; color: #51855f; background: #edf5ed; }
+.status-badge.incomplete { border-color: #dba58f; color: #b64d33; background: #f8ebe5; }
+.period-meta { margin: 4px 0 14px; color: #81796e; font: 10px "DM Mono", monospace; }
+.callout.compact { margin: 16px 0; padding: 12px 16px; }
 .research-card, .market-card { border-top: 2px solid #252525; padding: 18px 0; }
 .research-card h3 { margin: 10px 0 8px; font: 600 19px "Noto Serif SC", serif; }
 .research-card p, .market-card small { margin: 0; color: #716c63; font-size: 13px; line-height: 1.8; }
@@ -76,7 +90,7 @@ tr:hover td { background: #f0e9df; }
 .load-error { color: #b64d33; }
 .site-footer { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #d8d0c3; padding: 22px 0 36px; color: #8d8579; font: 11px "DM Mono", monospace; }
 .site-footer a { color: #b64d33; text-decoration: none; }
-@media (max-width: 800px) { .site-masthead, .theme-heading { display: block; } .site-meta { margin-top: 22px; text-align: left; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .stat:last-child { grid-column: span 2; } .research-grid, .market-grid, .overview-grid { grid-template-columns: 1fr; } .asof { display: block; margin-top: 18px; } }
+@media (max-width: 800px) { .site-masthead, .theme-heading, .period-heading { display: block; } .site-meta { margin-top: 22px; text-align: left; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .stat:last-child { grid-column: span 2; } .research-grid, .market-grid, .overview-grid { grid-template-columns: 1fr; } .asof { display: block; margin-top: 18px; } .status-badge { display: inline-block; margin-top: 14px; } }
 @media (max-width: 480px) { .site-masthead, .site-main, .site-footer, .site-nav { width: min(100% - 28px, 1180px); } .site-main { padding-top: 42px; } .site-nav { gap: 15px; overflow-x: auto; } .stat-grid { grid-template-columns: 1fr; } .stat:last-child { grid-column: auto; } .site-footer { display: block; } .site-footer a { display: block; margin-top: 10px; } }
 .control-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 24px; padding: 10px 12px; border: 1px solid #d8d0c3; background: #f8f5ef; }
 .control-label { margin-left: 8px; color: #81796e; font: 10px "DM Mono", monospace; text-transform: uppercase; }

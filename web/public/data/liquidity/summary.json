@@ -47,6 +47,11 @@
       ]
     }
   ],
+  "periods": [
+    {"period": "2020-2024", "status": "incomplete", "common_start": null, "common_end": null, "markets": []},
+    {"period": "2025", "status": "incomplete", "common_start": null, "common_end": null, "markets": []},
+    {"period": "2026 YTD", "status": "incomplete", "common_start": null, "common_end": null, "markets": []}
+  ],
   "caveats": [
     "A股 daily source does not include omitted suspension days, so zero-volume frequency cannot be inferred.",
     "This is a mechanical liquidity profile, not strategy capacity or realized execution capacity.",
