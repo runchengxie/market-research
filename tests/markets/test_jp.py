@@ -41,3 +41,22 @@ def test_jp_adapter_respects_as_of(tmp_path: Path):
     panel, _ = build_jp_panel(tmp_path, as_of="2026-01-01")
 
     assert len(panel) == 1
+
+
+def test_jp_adapter_joins_optional_market_cap_sidecar(tmp_path: Path):
+    from market_research.markets.jp import build_jp_panel
+
+    daily = tmp_path / "daily" / "2026"
+    daily.mkdir(parents=True)
+    pd.DataFrame(
+        {"Date": ["2026-01-02"], "Code": [13010], "C": [100.0], "Vo": [1000.0], "Va": [100000.0]}
+    ).to_parquet(daily / "equities_bars_daily_2026.parquet")
+    valuation = tmp_path / "market_cap.parquet"
+    pd.DataFrame(
+        {"Date": ["2026-01-02"], "Code": ["13010"], "MarketCap": [2_000_000_000.0]}
+    ).to_parquet(valuation)
+
+    panel, metadata = build_jp_panel(tmp_path, market_cap_path=valuation)
+
+    assert panel.loc[0, "market_cap"] == 2_000_000_000.0
+    assert metadata.quality_status == "verified"

@@ -24,10 +24,11 @@ const axis = { axisLine: { lineStyle: { color: "#d8d0c3" } }, axisLabel: { color
 const grid = { left: 72, right: 72, top: 24, bottom: 48 };
 
 export function ResearchBarChart({ rows, labelKey, valueKey, color = "#1267d6", formatter = (value: number) => `${(value * 100).toFixed(1)}%`, logScale = false }: { rows: ChartRow[]; labelKey: string; valueKey: string; color?: string; formatter?: (value: number) => string; logScale?: boolean }) {
-  const selected = rows.filter((row) => Number.isFinite(Number(row[valueKey])));
-  const values = selected.map((row) => Number(row[valueKey]));
-  const canUseLog = logScale && values.length > 0 && values.every((value) => value > 0);
-  return <Chart option={{ animationDuration: 220, grid, tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: (value: unknown) => formatter(Number(value)) }, xAxis: { ...axis, type: canUseLog ? "log" : "value", axisLabel: { ...axis.axisLabel, formatter: (value: number) => canUseLog ? String(value) : formatter(value) }, splitLine: { lineStyle: { color: "#e8e1d6" } } }, yAxis: { ...axis, type: "category", data: selected.map((row) => row[labelKey]), axisLabel: { ...axis.axisLabel, width: 150, overflow: "truncate" } }, series: [{ type: "bar", data: values, barMaxWidth: 18, label: { show: true, position: "right", color: "#514b43", fontSize: 10, formatter: (params: any) => formatter(Number(params.value)) }, itemStyle: { color: (params: any) => Number(params.value) < 0 ? "#8e4d48" : color }, markLine: canUseLog ? undefined : { silent: true, symbol: "none", lineStyle: { color: "#81796e", width: 1 }, data: [{ xAxis: 0 }] } }] }} />;
+  const values = rows.map((row) => { const value = Number(row[valueKey]); return Number.isFinite(value) ? value : null; });
+  const finiteValues = values.filter((value): value is number => value != null);
+  const canUseLog = logScale && finiteValues.length > 0 && finiteValues.every((value) => value > 0);
+  const formatValue = (value: unknown) => value == null || value === "" || !Number.isFinite(Number(value)) ? "N/A" : formatter(Number(value));
+  return <Chart option={{ animationDuration: 220, grid, tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: formatValue }, xAxis: { ...axis, type: canUseLog ? "log" : "value", axisLabel: { ...axis.axisLabel, formatter: (value: number) => canUseLog ? String(value) : formatter(value) }, splitLine: { lineStyle: { color: "#e8e1d6" } } }, yAxis: { ...axis, type: "category", data: rows.map((row) => row[labelKey]), axisLabel: { ...axis.axisLabel, width: 150, overflow: "truncate" } }, series: [{ type: "bar", data: values, barMaxWidth: 18, label: { show: true, position: "right", color: "#514b43", fontSize: 10, formatter: (params: any) => formatValue(params.value) }, itemStyle: { color: (params: any) => Number(params.value) < 0 ? "#8e4d48" : color }, markLine: canUseLog ? undefined : { silent: true, symbol: "none", lineStyle: { color: "#81796e", width: 1 }, data: [{ xAxis: 0 }] } }] }} />;
 }
 
 export function ResearchLineChart({ series, labels }: { series: Series[]; labels: string[] }) {

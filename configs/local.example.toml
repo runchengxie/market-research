@@ -9,6 +9,8 @@ hk_valuation_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/valuation"
 hk_instruments_path = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/instruments/hk_all_instruments_20260526.parquet"
 us_shareprices_path = "/mnt/data/cold4t/simfin/us"
 jp_root = "/mnt/data/cold4t/nira/current/guan-japanese-nira/data"
+# Optional external daily valuation sidecar with Date, Code, and MarketCap or SharesOutstanding.
+jp_market_cap_path = ""
 
 [index_research]
 # Optional derived/input assets for the migrated index research commands.
