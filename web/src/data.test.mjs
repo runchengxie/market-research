@@ -12,3 +12,8 @@ test("publishes the migrated cross-market liquidity snapshot", () => {
   assert.equal(summary.method.roll_days, 20);
   assert.ok(summary.markets.every((market) => market.buckets.length >= 4));
 });
+
+test("does not publish the retired animal index dataset", () => {
+  assert.equal(fs.existsSync(path.join(root, "animal")), false);
+  assert.equal(fs.existsSync(path.join(root, "plant")), false);
+});

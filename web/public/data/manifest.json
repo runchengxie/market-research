@@ -12,10 +12,6 @@
   "privacy": "Derived snapshot only; raw market data and local paths are excluded.",
   "included_snapshots": {
     "index_research_files": 22,
-    "animal_index_variants": [
-      "animal",
-      "plant"
-    ],
     "raw_data_published": false
   }
 }

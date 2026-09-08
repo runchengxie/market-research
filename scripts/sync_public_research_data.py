@@ -8,7 +8,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "web" / "public" / "data"
 INDEX_ROOT = Path("/home/richard/code/index-research/web/public/outputs")
-ANIMAL_ROOT = Path("/home/richard/code/a-share-animal-index/web/public/data")
 
 
 INDEX_FILES = (
@@ -53,26 +52,12 @@ def copy_files(source_root: Path, target_root: Path, files: tuple[str, ...]) -> 
 def main() -> None:
     if not INDEX_ROOT.exists():
         raise SystemExit(f"missing index-research public output: {INDEX_ROOT}")
-    if not ANIMAL_ROOT.exists():
-        raise SystemExit(f"missing a-share-animal-index public data: {ANIMAL_ROOT}")
-
     copied = copy_files(INDEX_ROOT, TARGET / "index", INDEX_FILES)
-    for relative in (
-        "latest.json",
-        "history.json",
-        "metadata.json",
-        "changes.json",
-        "constituents.json",
-    ):
-        copy_files(ANIMAL_ROOT, TARGET / "animal", (relative,))
-        copy_files(ANIMAL_ROOT / "plant", TARGET / "plant", (relative,))
-        copied += 2
 
     manifest_path = TARGET / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["included_snapshots"] = {
         "index_research_files": copied - 10,
-        "animal_index_variants": ["animal", "plant"],
         "raw_data_published": False,
     }
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
