@@ -86,6 +86,26 @@ def fetch_linked_indices(
         pd.concat(frames, ignore_index=True).to_parquet(out_dir / "linked_index_daily.parquet", index=False)
 
 
+def refresh_cashflow_indices(
+    out_dir: Path, start_date: str = "20100101", end_date: str = "20260904", client=None, indexes=DEFAULT_CASHFLOW_INDEXES
+) -> None:
+    client = client or _tushare_client()
+    codes = [str(row[0]) for row in indexes]
+    if indexes is DEFAULT_CASHFLOW_INDEXES:
+        codes.extend(TOTAL_RETURN_CODES.values())
+    frames = []
+    for code in codes:
+        frame = client.index_daily(ts_code=code, start_date=start_date, end_date=end_date)
+        if not frame.empty:
+            frame = frame.copy()
+            frame["api"] = "index_daily"
+            frames.append(frame)
+    if not frames:
+        raise RuntimeError("TuShare returned no cash-flow index data")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pd.concat(frames, ignore_index=True).to_parquet(out_dir / "cashflow_index_daily.parquet", index=False)
+
+
 def build_index_price_snapshot(index_daily: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
     frame = index_daily.copy()
     frame["trade_date"] = pd.to_datetime(frame["trade_date"].astype(str), format="%Y%m%d", errors="coerce")

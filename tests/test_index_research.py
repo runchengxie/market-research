@@ -87,3 +87,15 @@ def test_fetch_linked_indices_writes_checkpoint_with_injected_client(tmp_path):
     status = pd.read_csv(tmp_path / "out" / "linked_index_fetch_status.csv")
     assert list(status["status"]) == ["ok", "ok", "unsupported_code_suffix"]
     assert (tmp_path / "out" / "linked_index_daily.parquet").exists()
+
+
+def test_refresh_cashflow_indices_writes_parquet_without_network(tmp_path):
+    from market_research.index_research import refresh_cashflow_indices
+
+    class Client:
+        def index_daily(self, **kwargs):
+            return pd.DataFrame({"ts_code": [kwargs["ts_code"]], "trade_date": ["20260105"], "close": [100.0]})
+
+    refresh_cashflow_indices(tmp_path / "out", client=Client(), indexes=(("932365.CSI", "cash"),))
+    result = pd.read_parquet(tmp_path / "out" / "cashflow_index_daily.parquet")
+    assert result.loc[0, "ts_code"] == "932365.CSI"
