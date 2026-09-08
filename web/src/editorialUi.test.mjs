@@ -18,10 +18,12 @@ test("微盘页面保留旧版研究阅读顺序和图表组件", () => {
 });
 
 test("研究总览使用四个研究域和小微盘子主题", () => {
-  assert.match(source, /现金流策略探索/);
-  assert.match(source, /小微盘策略探索/);
-  assert.match(source, /市场长期风格研究/);
-  assert.match(source, /跨市场探索/);
+  assert.match(source, /现金流历史研究/);
+  assert.match(source, /小微盘历史研究/);
+  assert.match(source, /长期风格历史研究/);
+  assert.match(source, /研究中的专题/);
+  assert.match(source, /历史研究档案/);
+  assert.match(source, /描述性市场证据/);
   assert.match(source, /跨市场小微盘流动性/);
   assert.match(source, /Barra · 18年因子研究/);
   assert.match(source, /Barra 快照尚未发布到网页/);

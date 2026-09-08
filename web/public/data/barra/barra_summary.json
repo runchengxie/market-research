@@ -16,7 +16,7 @@
     "quantiles": 10,
     "holding_period": 1,
     "monotonicity_score": 0.8888888888888888,
-    "tail_spread": 0.0015311597621559428,
+    "tail_spread": 0.0019937210463092953,
     "coverage_start": "2015-01-05",
     "coverage_end": "2026-09-04",
     "formation_dates": 2838,

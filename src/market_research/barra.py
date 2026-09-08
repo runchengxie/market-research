@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 
@@ -92,7 +93,7 @@ def analyze_size_monotonicity(
         eligible.groupby("date")["market_cap"]
         .rank(method="first", ascending=True, pct=True)
         .mul(quantiles)
-        .apply(lambda value: min(quantiles, max(1, int(value))))
+        .apply(lambda value: min(quantiles, max(1, int(np.ceil(value)))))
     )
     result = (
         eligible.groupby(["date", "bucket"], as_index=False)
