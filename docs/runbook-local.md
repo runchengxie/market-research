@@ -1,50 +1,45 @@
-# Local runbook
+# 本地运行手册
 
-## Setup
+## 安装
 
 ```bash
 uv sync --extra dev --extra duckdb
 cp configs/local.example.toml configs/local.toml
 ```
 
-Edit `configs/local.toml` so each source points to an existing local data root.
-The file is ignored by Git because the paths are machine-specific.
-Set `use_duckdb = true` for large A-share Parquet directories and install the
-optional DuckDB dependency with `uv sync --extra duckdb`.
+编辑 `configs/local.toml`，让每个数据源指向本机已有的数据目录。该文件已被 Git 忽略，因为其中包含机器相关路径。处理大型 A 股 Parquet 目录时，将 `use_duckdb = true`，并通过 `uv sync --extra duckdb` 安装 DuckDB 依赖。
 
-## Validate configured roots
+## 检查数据目录
 
 ```bash
 uv run market-research validate --config configs/local.toml
 ```
 
-This command only discovers configured roots and does not read all market data.
+该命令只检查配置的数据目录是否存在，不会读取全部行情数据。
 
-## Build liquidity report
+## 构建流动性报告
 
 ```bash
 uv run market-research report liquidity --config configs/local.toml
 ```
 
-Outputs are written under `output_root`:
+结果会写入 `output_root`：
 
 - `liquidity_report.json`
 - `liquidity_summary.csv`
 - `coverage_diagnostics.csv`
 
-## Build A-share microcap reconstruction
+## 构建 A 股微盘重建
 
 ```bash
 uv run market-research report microcap --config configs/local.toml
 ```
 
-The output is a research reconstruction of the smallest-400 equal-weight rule,
-not the official Wind 8841431.WI index. It does not simulate costs, limit-up
-execution, suspension execution, market impact, or strategy capacity.
+该结果使用最小市值 400 只股票等权的研究规则，不代表 Wind 官方 `8841431.WI` 指数。计算中没有模拟交易成本、涨跌停成交、停牌成交、市场冲击和策略容量。
 
-## Known local roots
+## 当前数据目录
 
-- A-share daily-clean data: `/home/richard/data/market-data-platform/assets/tushare/a_share/daily`
-- HK RQData assets: `/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk`
-- US SimFin: `/mnt/data/cold4t/simfin/us/extracted/us-shareprices-daily.csv`
-- JPX/J-Quants via nira: `/mnt/data/cold4t/nira/current/guan-japanese-nira/data`
+- A 股日频清洗数据：`/home/richard/data/market-data-platform/assets/tushare/a_share/daily`
+- 港股 RQData：`/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk`
+- 美股 SimFin：`/mnt/data/cold4t/simfin/us/extracted/us-shareprices-daily.csv`
+- nira 提供的 JPX、J-Quants 数据：`/mnt/data/cold4t/nira/current/guan-japanese-nira/data`

@@ -78,3 +78,18 @@ tr:hover td { background: #f0e9df; }
 .site-footer a { color: #b64d33; text-decoration: none; }
 @media (max-width: 800px) { .site-masthead, .theme-heading { display: block; } .site-meta { margin-top: 22px; text-align: left; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .stat:last-child { grid-column: span 2; } .research-grid, .market-grid, .overview-grid { grid-template-columns: 1fr; } .asof { display: block; margin-top: 18px; } }
 @media (max-width: 480px) { .site-masthead, .site-main, .site-footer, .site-nav { width: min(100% - 28px, 1180px); } .site-main { padding-top: 42px; } .site-nav { gap: 15px; overflow-x: auto; } .stat-grid { grid-template-columns: 1fr; } .stat:last-child { grid-column: auto; } .site-footer { display: block; } .site-footer a { display: block; margin-top: 10px; } }
+.control-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -12px 0 24px; padding: 10px 12px; border: 1px solid #d8d0c3; background: #f8f5ef; }
+.control-label { margin-left: 8px; color: #81796e; font: 10px "DM Mono", monospace; text-transform: uppercase; }
+.choice { border: 1px solid #d8d0c3; padding: 6px 10px; color: #716c63; background: transparent; cursor: pointer; font-size: 11px; }
+.choice:hover, .choice.active { border-color: #c84b2f; color: #b64d33; background: #ede5d9; }
+.interactive-chart { position: relative; }
+.interactive-chart svg { cursor: crosshair; }
+.chart-tooltip { position: absolute; top: 10px; transform: translateX(-50%); z-index: 2; min-width: 160px; padding: 10px 12px; border: 1px solid #d8d0c3; background: #252525; color: #f8f5ef; box-shadow: 0 6px 16px rgba(37, 37, 37, .12); pointer-events: none; font: 10px "DM Mono", monospace; }
+.chart-tooltip strong, .chart-tooltip span { display: block; margin: 3px 0; }
+.chart-tooltip i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; }
+.table-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.table-controls input { min-width: 240px; border: 1px solid #d8d0c3; padding: 8px 10px; color: #252525; background: #f4f0e8; outline: none; font-size: 12px; }
+.table-controls input:focus { border-color: #c84b2f; }
+.table-sort { border: 0; padding: 0; color: inherit; background: transparent; cursor: pointer; font: inherit; }
+.table-sort:hover { color: #b64d33; }
+@media (max-width: 480px) { .control-bar { align-items: stretch; } .table-controls { display: block; } .table-controls input { width: 100%; min-width: 0; margin-bottom: 8px; } }

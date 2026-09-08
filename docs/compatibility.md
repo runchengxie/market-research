@@ -1,29 +1,18 @@
-# Compatibility and migration notes
+# 兼容性与迁移说明
 
-The new project is a research entry point, not a destructive replacement for
-the source projects.
+新项目是统一研究入口，旧项目继续保留历史代码、数据和研究记录。
 
-## Existing projects
+## 现有项目
 
-- `index-research` remains the reference for the existing public microcap
-  snapshots, index research page, and historical output files.
-- `market-liquidity-profiles` remains the reference for the original capacity
-  adapters, capacity schema, and cross-market liquidity result notes.
-- `nira` remains the source of JPX/J-Quants data and its own Japan-specific
-  research workflows.
+- `index-research`：微盘公开快照、指数研究页面和历史输出文件的来源。
+- `market-liquidity-profiles`：容量适配器、容量数据结构和跨市场流动性结果说明的来源。
+- `nira`：JPX、J-Quants 数据及日本市场专用研究流程的来源。
 
-The new implementations are tested against small deterministic fixtures. A
-full historical parity comparison is required before replacing an old command.
+新实现使用小型确定性样本进行测试。替换旧命令前，仍需完成完整历史数据的口径比对。
 
-## Known intentional differences
+## 当前差异
 
-1. The canonical panel preserves native currency; the old capacity project
-   often normalized snapshot outputs to USD immediately.
-2. The JP adapter currently lacks a paired market-cap source because the nira
-   daily bars expose price, volume, and traded value but not total market cap.
-   JP market-cap-dependent reports therefore remain `incomplete`.
-3. The new microcap reconstruction exposes selected/priced counts and can join
-   lagged liquidity diagnostics; its return rule remains the smallest-400,
-   equal-weight, next-market-day research rule.
-4. The new report bundle is static JSON/CSV in the first phase; the existing
-   `index-research` frontend is not migrated yet.
+1. 统一面板保留各市场本币。跨市场换算在后续计算中完成，并在元数据中记录 `currency` 和 `fx_method`。
+2. 日股适配器目前没有配套的市值来源。nira 日频数据包含价格、成交量和成交额，但没有总市值，因此日股市值相关报告会标记为 `incomplete`。
+3. 微盘重建会展示入选数量和有价格数据的数量，也可以连接滞后流动性诊断。收益规则仍是最小市值 400 只股票等权、下一交易日执行的研究规则。
+4. 首阶段报告以静态 JSON 和 CSV 发布，页面使用 `market-research` 的统一前端。

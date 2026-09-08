@@ -44,3 +44,20 @@ export function summarizeNav(rows) {
     drawdown,
   };
 }
+
+export function filterByRange(rows, range) {
+  if (range === "all") return rows;
+  const start = range === "ytd" ? `${new Date().getFullYear()}-01-01` : `${Number(range) - 1}-01-01`;
+  return rows.filter((row) => row.date >= start);
+}
+
+export function sortRows(rows, key, direction = "asc") {
+  return [...rows].sort((left, right) => {
+    const leftNumber = Number(left[key]);
+    const rightNumber = Number(right[key]);
+    const comparison = Number.isFinite(leftNumber) && Number.isFinite(rightNumber)
+      ? leftNumber - rightNumber
+      : String(left[key] ?? "").localeCompare(String(right[key] ?? ""));
+    return direction === "desc" ? -comparison : comparison;
+  });
+}
