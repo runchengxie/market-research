@@ -81,7 +81,7 @@ function BarChart({ rows, labelKey, valueKey, color = "#c84b2f", formatter = pct
   const values = selected.map((row) => asNumber(row[valueKey]));
   const scale = (value: number) => logScale ? Math.log10(Math.max(Math.abs(value), 1)) : Math.abs(value);
   const max = Math.max(...values.map(scale), 1);
-  return <div className="bar-chart">{selected.map((row) => <div className="bar-row" key={`${row[labelKey]}-${row[valueKey]}`}><span title={row[labelKey]}>{row[labelKey]}</span><div className="bar-track"><i style={{ width: `${Math.min(scale(asNumber(row[valueKey])) / max * 100, 100)}%`, background: asNumber(row[valueKey]) < 0 ? "#8e4d48" : color }}/></div><strong>{formatter(asNumber(row[valueKey]))}</strong></div>)}</div>;
+  return <div className="bar-chart">{selected.map((row) => { const value = asNumber(row[valueKey]); const width = Math.min(scale(value) / max * 50, 50); return <div className="bar-row" key={`${row[labelKey]}-${row[valueKey]}`} title={`${row[labelKey]}：${formatter(value)}`}><span title={row[labelKey]}>{row[labelKey]}</span><div className="bar-track diverging"><b className="bar-zero"/><i className={value < 0 ? "negative" : "positive"} style={{ width: `${width}%`, left: value < 0 ? `${50 - width}%` : "50%", background: value < 0 ? "#8e4d48" : color }}/></div><strong>{formatter(value)}</strong></div>; })}</div>;
 }
 
 function ControlBar({ children }: { children: React.ReactNode }) { return <div className="control-bar">{children}</div>; }
@@ -222,7 +222,7 @@ function LiquidityPageLegacy() {
 
 function ThemeHeading({ kicker, title, text, asof }: { kicker: string; title: string; text: string; asof: string }) { return <header className="theme-heading"><div><span className="section-kicker">{kicker}</span><h2>{title}</h2><p>{text}</p></div><span className="asof">{asof}</span></header>; }
 function SimpleTable({ rows, columns, percentColumns = [] }: { rows: Row[]; columns: string[][]; percentColumns?: string[] }) { return <div className="table-scroll"><table><thead><tr>{columns.map(([key, label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={`${index}-${row[columns[0]?.[0] ?? ""]}`}>{columns.map(([key]) => <td key={key}>{percentColumns.includes(key) ? pct(asNumber(row[key])) : row[key] === "" || row[key] == null ? "—" : row[key]}</td>)}</tr>)}</tbody></table></div>; }
-function SortableTable({ rows, columns, percentColumns = [] }: { rows: Row[]; columns: string[][]; percentColumns?: string[] }) {
+function SortableTable({ rows, columns, percentColumns = [], searchPlaceholder = "搜索表格内容" }: { rows: Row[]; columns: string[][]; percentColumns?: string[]; searchPlaceholder?: string }) {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState(columns[0]?.[0] ?? "");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
@@ -233,7 +233,7 @@ function SortableTable({ rows, columns, percentColumns = [] }: { rows: Row[]; co
     return direction === "desc" ? -comparison : comparison;
   });
   const choose = (key: string) => { if (key === sortKey) setDirection(direction === "desc" ? "asc" : "desc"); else { setSortKey(key); setDirection("desc"); } };
-  return <><div className="table-controls"><input aria-label="搜索 ETF" placeholder="搜索 ETF 或指数名称" value={query} onChange={(event) => setQuery(event.target.value)}/><span>{visible.length} / {rows.length} 条</span></div><div className="table-scroll"><table><thead><tr>{columns.map(([key, label]) => <th key={key}><button className="table-sort" onClick={() => choose(key)}>{label} {sortKey === key ? (direction === "desc" ? "↓" : "↑") : "↕"}</button></th>)}</tr></thead><tbody>{visible.slice(0, 50).map((row, index) => <tr key={`${index}-${row[columns[0]?.[0] ?? ""]}`}>{columns.map(([key]) => <td key={key}>{percentColumns.includes(key) ? pct(asNumber(row[key])) : row[key] === "" || row[key] == null ? "—" : row[key]}</td>)}</tr>)}</tbody></table></div></>;
+  return <><div className="table-controls"><input aria-label={searchPlaceholder} placeholder={searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)}/><span>{visible.length} / {rows.length} 条</span></div><div className="table-scroll"><table><thead><tr>{columns.map(([key, label]) => <th key={key}><button className="table-sort" onClick={() => choose(key)}>{label} {sortKey === key ? (direction === "desc" ? "↓" : "↑") : "↕"}</button></th>)}</tr></thead><tbody>{visible.slice(0, 50).map((row, index) => <tr key={`${index}-${row[columns[0]?.[0] ?? ""]}`}>{columns.map(([key]) => <td key={key}>{percentColumns.includes(key) ? pct(asNumber(row[key])) : row[key] === "" || row[key] == null ? "—" : row[key]}</td>)}</tr>)}</tbody></table></div></>;
 }
 function Loading() { return <p className="loading">正在加载研究快照……</p>; }
 
