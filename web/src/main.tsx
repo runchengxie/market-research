@@ -14,6 +14,8 @@ type LiquidityPeriodMarket = { market: string; status: string; coverage_start?: 
 type LiquidityPeriod = { period: string; status: string; common_start?: string | null; common_end?: string | null; markets: LiquidityPeriodMarket[] };
 type LiquiditySummary = { method: { roll_days: number; metric: string; currency: string; source_project: string }; markets: LiquidityPeriodMarket[]; periods?: LiquidityPeriod[]; caveats: string[] };
 type BarraSummary = { source?: { coverage_start?: string; coverage_end?: string }; size_monotonicity?: { quantiles?: number; tail_spread?: number; monotonicity_score?: number; formation_dates?: number }; legacy_barra_result?: { factor_count?: number } };
+type HistoricalFactor = { factor: string; days: number; years: number; cumulative_ret: number; geometric_annual_ret: number; annual_vol: number; sharpe: number; max_drawdown: number; hit_rate: number };
+type CorrelationMatrix = Record<string, Record<string, number>>;
 
 const DATA = "./data";
 const pct = (value: number | null | undefined) => value == null || Number.isNaN(value) ? "—" : `${(value * 100).toFixed(1)}%`;
@@ -118,7 +120,7 @@ function IndicesPage() {
   return <><ThemeHeading kicker="指数长期回报 · ETF可投资性" title="从指数表现到真实产品，把长期回报和可投资性放在一起。" text="恢复 index-research 的指数目录、十年价格回报和 ETF 代表配对结果。价格指数不含分红，ETF 数据还会受到费用和跟踪误差影响。" asof="静态公开快照"/><section className="stat-grid"><Stat label="指数目录" value={num(catalog.length)} note="已收录公开目录" accent/><Stat label="十年可比指数" value={num(returns.length)} note="有完整起止数据"/><Stat label="ETF代表" value={num(etfs.length)} note="指数配对结果"/><Stat label="流动性通过" value={num(liquid)} note="近60日成交额筛选"/></section><Panel title="十年价格回报最高的指数" tag="前12名"><BarChart rows={top} labelKey="indx_name" valueKey="cagr" color="#1267d6"/></Panel><Panel title="ETF代表：指数与产品的差异" tag="可搜索、可排序"><SortableTable rows={etfs} columns={[["ts_code", "ETF"], ["matched_index_name", "跟踪指数"], ["etf_cagr", "ETF年化"], ["index_cagr", "指数年化"], ["etf_max_drawdown", "ETF回撤"], ["median_amount_60d", "60日中位成交额"]]} percentColumns={["etf_cagr", "index_cagr", "etf_max_drawdown"]}/></Panel></>;
 }
 
-function BarraPage() {
+function BarraDiagnosticPage() {
   const { data: summary, error: summaryError } = useJson<BarraSummary>("barra/barra_summary.json");
   const { data: quantiles, error: quantilesError } = useCsv("barra/barra_size_quantiles.csv");
   if (!summary || !quantiles) return <><ThemeHeading kicker="Barra · 18年因子市场证据" title="把长期风格现象放在可复核的分位收益曲线上。" text="这里展示市场证据层的因子摘要与市值尾部单调性诊断，不替代 alpha 选择、IC/衰减分析或策略晋升判断。" asof="快照待发布"/><div className="callout status-panel"><span className="section-kicker">研究状态</span><h3>Barra 快照尚未发布到网页</h3><p>{summaryError || quantilesError ? "当前网页目录还没有可读取的 barra_summary.json 与 barra_size_quantiles.csv。生成报告后即可接入真实结果。" : "正在加载 Barra 研究快照。"}</p></div></>;
@@ -127,6 +129,47 @@ function BarraPage() {
   const rows = quantiles.map((row) => ({ bucket: row.bucket_label || row.bucket, forward_return: row.mean_forward_return, count: row.count, formation_date: row.formation_date }));
   const curve = Object.values(rows.reduce<Record<string, Row>>((result, row) => { const current = result[row.bucket] ?? { bucket: row.bucket, forward_return: "0", count: "0" }; current.forward_return = String(Number(current.forward_return) + Number(row.forward_return || 0)); current.count = String(Number(current.count) + 1); result[row.bucket] = current; return result; }, {})).map((row) => ({ bucket: row.bucket, value: String(Number(row.forward_return) / Math.max(Number(row.count), 1)) }));
   return <><ThemeHeading kicker="历史研究档案 · Barra 风格因子" title="把长期风格现象放在可复核的历史分位曲线上。" text="这里汇总历史结果包与当前 A 股可复现窗口的市值诊断；它是描述性市场证据，不是统计显著性或策略有效性的证明。" asof={summary.source ? `当前重算 ${summary.source.coverage_start ?? "—"} 至 ${summary.source.coverage_end ?? "—"}` : "研究快照"}/><section className="stat-grid"><Stat label="历史因子数" value={num(factorCount)} note="来自历史结果包" accent/><Stat label="市值分位" value={num(monotonicity?.quantiles)} note="当前描述性诊断"/><Stat label="尾部价差" value={pct(Number(monotonicity?.tail_spread))} note="Q1 减 Q10"/><Stat label="形成日数量" value={num(monotonicity?.formation_dates)} note="不是独立样本数"/></section><Panel title="市值分位的平均未来收益" tag="历史诊断 · 形成日分位 · 下一交易日收益"><BarChart rows={curve} labelKey="bucket" valueKey="value" color="#b64d33"/></Panel><Panel title="市值分位诊断明细" tag="可搜索、可排序"><SortableTable rows={rows} columns={[["formation_date", "形成日"], ["bucket", "市值分位"], ["forward_return", "未来收益"], ["count", "股票数"]]} percentColumns={["forward_return"]}/></Panel><div className="fine-print"><span className="section-kicker">研究边界</span><p>“18 年”表示历史研究窗口，不是 2018 年。当前可复现窗口为 {summary.source?.coverage_start ?? "—"} 至 {summary.source?.coverage_end ?? "—"}；日频横截面观测存在时间相关性，这里没有进行正式显著性检验，也不等同于 alpha、IC、衰减或可交易策略收益。</p></div></>;
+}
+
+const FACTOR_NAMES: Record<string, string> = { beta: "低贝塔", chip_concentration: "筹码集中度", dividend_yield: "股息率", earnings_yield: "盈利收益率", fund_breadth: "公募重仓广度", fund_breadth_change: "公募重仓广度变化", fund_ownership: "公募重仓比例", fund_ownership_change: "公募重仓比例变化", growth: "成长", institution_holding: "机构持仓", leverage: "低杠杆", liquidity: "低换手", liquidity_flow: "大单资金流", lowvol: "低波动", momentum: "21日动量", ps_value: "市销率价值", quality: "质量", size: "市值", value: "价值" };
+const FACTOR_DEFINITIONS: Row[] = [
+  { factor: "size", name: "市值", direction: "大市值减小市值", method: "总市值自然对数，月度分层" },
+  { factor: "value", name: "价值", direction: "低市净率减高市净率", method: "市净率倒数，月度分层" },
+  { factor: "momentum", name: "21日动量", direction: "强势减弱势", method: "21日收益，月度分层" },
+  { factor: "quality", name: "质量", direction: "高质量减低质量", method: "ROE、低杠杆、盈利稳定性和现金流质量等权合成" },
+  { factor: "earnings_yield", name: "盈利收益率", direction: "低市盈率减高市盈率", method: "滚动市盈率倒数" },
+  { factor: "lowvol", name: "低波动", direction: "低波动减高波动", method: "最近21个收益观察值的波动率" },
+  { factor: "growth", name: "成长", direction: "高增长减低增长", method: "净利润同比和营业收入同比，按公告日对齐" },
+  { factor: "leverage", name: "低杠杆", direction: "低杠杆减高杠杆", method: "资产负债率，按公告日对齐" },
+  { factor: "beta", name: "低贝塔", direction: "低贝塔减高贝塔", method: "252日滚动市场贝塔，至少126日" },
+  { factor: "liquidity", name: "低换手", direction: "低换手减高换手", method: "换手率" },
+  { factor: "liquidity_flow", name: "大单资金流", direction: "大单净买入较高减较低", method: "大单净买入占比" },
+  { factor: "chip_concentration", name: "筹码集中度", direction: "集中度较高减较低", method: "前十大流通股东持股占比" },
+  { factor: "institution_holding", name: "机构持仓", direction: "机构持仓较高减较低", method: "前十大机构流通持股占比" },
+  { factor: "fund_breadth", name: "公募前十大重仓广度", direction: "重仓基金较多减较少", method: "月末可见 PIT 状态下的前十大重仓基金数量" },
+  { factor: "fund_breadth_change", name: "公募重仓广度变化", direction: "重仓覆盖增加减减少", method: "前十大重仓基金数量相对上期变化" },
+  { factor: "fund_ownership", name: "公募重仓比例", direction: "重仓比例较高减较低", method: "前十大重仓流通股持仓比例合计" },
+  { factor: "fund_ownership_change", name: "公募重仓比例变化", direction: "重仓比例增加减减少", method: "前十大重仓流通股持仓比例相对上期变化" },
+  { factor: "dividend_yield", name: "股息率", direction: "高股息率减低股息率", method: "过去12个月股息率" },
+  { factor: "ps_value", name: "市销率价值", direction: "低市销率减高市销率", method: "滚动市销率倒数" },
+];
+
+function BarraPage() {
+  const { data: summary, error: summaryError } = useJson<BarraSummary>("barra/barra_summary.json");
+  const { data: quantiles, error: quantilesError } = useCsv("barra/barra_size_quantiles.csv");
+  const { data: factors } = useJson<HistoricalFactor[]>("barra/historical_factor_summary.json");
+  const { data: yearly } = useCsv("barra/factor_yearly.csv");
+  const { data: correlations } = useJson<CorrelationMatrix>("barra/factor_correlation.json");
+  const [selectedFactor, setSelectedFactor] = useState("size");
+  if (!summary || !quantiles || !factors || !yearly || !correlations) return <><ThemeHeading kicker="历史研究档案 · Barra 风格因子" title="把长期风格现象还原成一份可阅读的历史研究。" text="这里展示历史结果包中的方法、因子表现、逐年收益和相关性；当前市值分位诊断只是补充分析。" asof="历史快照加载中"/><div className="callout status-panel"><span className="section-kicker">研究状态</span><h3>历史研究快照正在加载</h3><p>{summaryError || quantilesError ? "网页数据不完整，请先生成并发布 Barra 历史派生文件。" : "正在加载历史因子总览、逐年收益和相关性数据。"}</p></div></>;
+  const monotonicity = summary.size_monotonicity;
+  const quantileRows = quantiles.map((row) => ({ bucket: row.bucket_label || row.bucket, forward_return: row.mean_forward_return, count: row.count, formation_date: row.formation_date }));
+  const quantileCurve = Object.values(quantileRows.reduce<Record<string, Row>>((result, row) => { const current = result[row.bucket] ?? { bucket: row.bucket, forward_return: "0", count: "0" }; current.forward_return = String(Number(current.forward_return) + Number(row.forward_return || 0)); current.count = String(Number(current.count) + 1); result[row.bucket] = current; return result; }, {})).map((row) => ({ bucket: row.bucket, value: String(Number(row.forward_return) / Math.max(Number(row.count), 1)) }));
+  const factorRows = factors.map((factor) => ({ factor: FACTOR_NAMES[factor.factor] ?? factor.factor, coverage: `${factor.years} 年 · ${factor.days} 日`, annual: String(factor.geometric_annual_ret / 100), vol: String(factor.annual_vol / 100), sharpe: String(factor.sharpe), drawdown: String(factor.max_drawdown / 100), hit: String(factor.hit_rate / 100) }));
+  const selectedYearly = yearly.filter((row) => row.factor === selectedFactor).map((row) => ({ year: row.year, value: String(asNumber(row.annual_ret) / 100) }));
+  const related = Object.entries(correlations[selectedFactor] ?? {}).filter(([factor]) => factor !== selectedFactor).sort(([, left], [, right]) => Math.abs(right) - Math.abs(left)).slice(0, 8).map(([factor, value]) => ({ factor: FACTOR_NAMES[factor] ?? factor, correlation: String(value) }));
+  const selectedFactorSummary = factors.find((factor) => factor.factor === selectedFactor);
+  return <><ThemeHeading kicker="历史研究档案 · Barra 风格因子" title="把长期风格现象还原成一份可阅读的历史研究。" text="页面完整呈现历史结果包中的研究问题、因子定义、长期表现、逐年收益、相关性与数据覆盖；市值分位是补充分析。" asof="历史样本 2008-01-02 至 2026-09-04"/><div className="callout research-status"><span className="section-kicker">研究性质</span><h3>历史描述性证据，不是策略晋升结论</h3><p>这份研究回答“过去的市场风格现象是什么”，不回答“未来是否还能赚钱”。年化收益、Sharpe 和命中率是样本内描述，没有进行正式显著性检验、Bootstrap 或多重检验校正。</p></div><SectionHeading title="研究问题与方法" text="先说明研究对象，再阅读数字，避免把历史结果误读成未来预测。"/><div className="research-grid"><ResearchCard title="研究对象" text="研究 19 个 A 股横截面风格因子，按形成日可见信息分层，最高 20% 与最低 20% 组合在月末等权建仓并持有至下一个月末。"/><ResearchCard title="行业处理" text="因子先按历史生效区间匹配的申万一级行业去均值，再进行全市场标准化；缺少行业匹配的股票作为残差组处理。"/><ResearchCard title="样本口径" text="大部分基础因子覆盖约 18.6 年；机构持仓、筹码和公募持仓类因子只有约 11 年或更短，资金流因子仅约 0.6 年。"/></div><Panel title="因子定义与方向" tag="历史研究方法"><SimpleTable rows={FACTOR_DEFINITIONS} columns={[["name", "因子"], ["direction", "方向"], ["method", "构造方法"]]} /></Panel><Panel title="19 个因子表现总览" tag="历史样本描述"><SortableTable rows={factorRows} columns={[["factor", "因子"], ["coverage", "覆盖"], ["annual", "几何年化"], ["vol", "年化波动"], ["sharpe", "Sharpe"], ["drawdown", "最大回撤"], ["hit", "日胜率"]]} percentColumns={["annual", "vol", "drawdown", "hit"]}/></Panel><Panel title="逐年收益与阶段观察" tag="选择因子"><ControlBar><span className="control-label">因子</span>{factors.map((factor) => <Choice key={factor.factor} active={selectedFactor === factor.factor} onClick={() => setSelectedFactor(factor.factor)}>{FACTOR_NAMES[factor.factor] ?? factor.factor}</Choice>)}</ControlBar><BarChart rows={selectedYearly} labelKey="year" valueKey="value" color="#1267d6"/><p className="panel-note">{FACTOR_NAMES[selectedFactor] ?? selectedFactor}：覆盖 {selectedFactorSummary?.years ?? "—"} 年，几何年化 {pct((selectedFactorSummary?.geometric_annual_ret ?? 0) / 100)}，仅作为历史样本路径阅读。</p></Panel><Panel title="因子相关性" tag="与当前选择因子的相关性"><SimpleTable rows={related} columns={[["factor", "因子"], ["correlation", "相关系数"]]} /></Panel><Panel title="补充：当前市值分位诊断" tag="不是完整 18 年因子结果"><p className="panel-note">这部分基于当前 canonical A 股 daily-clean 面板重新计算，覆盖 {summary.source?.coverage_start ?? "—"} 至 {summary.source?.coverage_end ?? "—"}。它用于补充观察市值尾部排序，不替代上面的历史 19 因子报告；形成日数量为 {num(monotonicity?.formation_dates)}，不是独立样本数量。</p><BarChart rows={quantileCurve} labelKey="bucket" valueKey="value" color="#b64d33"/><SortableTable rows={quantileRows} columns={[["formation_date", "形成日"], ["bucket", "市值分位"], ["forward_return", "未来收益"], ["count", "股票数"]]} percentColumns={["forward_return"]}/></Panel><div className="fine-print"><span className="section-kicker">研究限制</span><p>历史报告使用基础日行情、日频估值和后续重建的历史财务数据；不同因子覆盖期不同，不能把所有因子横向视为同一长度样本。日频收益存在时间相关性，Sharpe、年化收益和逐年表现不等于统计显著性，也不包含手续费、容量、涨跌停、停牌和实际执行约束。</p></div></>;
 }
 
 function CashflowPage() {
