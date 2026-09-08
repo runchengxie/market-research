@@ -27,3 +27,10 @@ def test_cashflow_report_writes_status_and_frequency_outputs(tmp_path: Path):
 
     assert main(["report", "cashflow", "--config", str(config)]) == 0
     assert (output / "cashflow_indices" / "cashflow_data_status.csv").exists()
+
+
+def test_cli_help_lists_migrated_fetch_commands(capsys):
+    from market_research.cli import main
+
+    assert main(["fetch", "--help"]) == 0
+    assert "linked-indices" in capsys.readouterr().out

@@ -14,5 +14,6 @@ jp_root = "/mnt/data/cold4t/nira/current/guan-japanese-nira/data"
 # Optional derived/input assets for the migrated index research commands.
 index_daily_path = ""
 linked_index_daily_path = ""
+mapping_csv = ""
 index_start_date = "20160902"
 index_end_date = "20260821"

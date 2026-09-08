@@ -17,7 +17,12 @@ from .indexes import (
 )
 from .reports import build_liquidity_report, write_report_bundle
 from .microcap import write_microcap_snapshot
-from .index_research import build_cashflow_snapshot, build_index_price_snapshot
+from .index_research import (
+    build_cashflow_snapshot,
+    build_index_price_snapshot,
+    fetch_linked_indices,
+    refresh_cashflow_indices,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -39,6 +44,12 @@ def _build_parser() -> argparse.ArgumentParser:
     cashflow.add_argument("--config", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
+    fetch = subparsers.add_parser("fetch")
+    fetch_subparsers = fetch.add_subparsers(dest="fetch_command")
+    linked = fetch_subparsers.add_parser("linked-indices")
+    linked.add_argument("--config", required=True)
+    cashflow_fetch = fetch_subparsers.add_parser("cashflow")
+    cashflow_fetch.add_argument("--config", required=True)
     return parser
 
 
@@ -57,6 +68,19 @@ def main(argv: list[str] | None = None) -> int:
         config = _load_config(Path(args.config))
         print(json.dumps({"configured_sources": sorted(_configured_source_names(config))}))
         return 0
+    if args.command == "fetch":
+        config = _load_config(Path(args.config))
+        if args.fetch_command == "linked-indices":
+            mapping = _index_research_path(config, "mapping_csv")
+            if mapping is None:
+                raise RuntimeError("index_research.mapping_csv is required")
+            output = Path(config.get("output_root", "outputs")) / "linked_indices"
+            fetch_linked_indices(mapping, output, start_date=str(config.get("index_start_date", "20150101")), end_date=str(config.get("index_end_date", "20260821")))
+            return 0
+        if args.fetch_command == "cashflow":
+            output = Path(config.get("output_root", "outputs")) / "cashflow_indices"
+            refresh_cashflow_indices(output, end_date=str(config.get("index_end_date", "20260904")))
+            return 0
     if args.command == "report" and args.report_command == "liquidity":
         config = _load_config(Path(args.config))
         panels, metadata = _build_configured_panels(config)
