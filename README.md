@@ -46,6 +46,7 @@ dashboard locally:
 ```bash
 cd web
 npm ci
+npm run snapshot  # only when refreshing the local derived snapshot
 npm run dev
 ```
 
