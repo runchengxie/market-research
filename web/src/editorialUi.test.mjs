@@ -25,6 +25,11 @@ test("研究总览使用四个研究域和小微盘子主题", () => {
   assert.match(source, /历史研究档案/);
   assert.match(source, /描述性市场证据/);
   assert.match(source, /跨市场小微盘流动性/);
+  assert.match(source, /研究问题与方法/);
+  assert.match(source, /19 个因子表现总览/);
+  assert.match(source, /逐年收益与阶段观察/);
+  assert.match(source, /因子相关性/);
+  assert.match(source, /历史描述性证据/);
   assert.match(source, /Barra · 18年因子研究/);
   assert.match(source, /Barra 快照尚未发布到网页/);
   assert.match(source, /navItems/);

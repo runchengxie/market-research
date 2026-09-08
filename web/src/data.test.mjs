@@ -23,6 +23,15 @@ test("publishes the Barra market-evidence snapshot", () => {
   assert.match(quantiles, /formation_date,bucket,mean_forward_return/);
 });
 
+test("publishes the historical Barra report datasets", () => {
+  const factors = JSON.parse(fs.readFileSync(path.join(root, "barra/historical_factor_summary.json"), "utf8"));
+  const yearly = fs.readFileSync(path.join(root, "barra/factor_yearly.csv"), "utf8");
+  const correlations = JSON.parse(fs.readFileSync(path.join(root, "barra/factor_correlation.json"), "utf8"));
+  assert.equal(factors.length, 19);
+  assert.match(yearly, /year,factor,days,period_start/);
+  assert.ok(correlations.size);
+});
+
 test("does not publish the retired animal index dataset", () => {
   assert.equal(fs.existsSync(path.join(root, "animal")), false);
   assert.equal(fs.existsSync(path.join(root, "plant")), false);
