@@ -31,6 +31,8 @@ test("研究总览使用四个研究域和小微盘子主题", () => {
   assert.match(source, /因子相关性/);
   assert.match(source, /历史描述性证据/);
   assert.match(source, /Barra · 18年因子研究/);
+  assert.match(source, /bar-track diverging/);
+  assert.match(source, /搜索表格内容/);
   assert.match(source, /Barra 快照尚未发布到网页/);
   assert.match(source, /navItems/);
 });
