@@ -14,6 +14,11 @@ from typing import Iterable
 import pandas as pd
 
 
+def symbols_pending_download(symbols: Iterable[str], completed: set[str]) -> list[str]:
+    """Return stable, de-duplicated symbols that do not have a checkpoint."""
+    return [symbol for symbol in dict.fromkeys(str(item).zfill(5) for item in symbols) if symbol not in completed]
+
+
 def jp_code_to_yahoo_symbol(code: object) -> str:
     """Convert a JPX five-character code to Yahoo's four-digit ``.T`` code."""
     text = str(code).strip()
@@ -57,6 +62,9 @@ def build_yfinance_shares_sidecar(
     *,
     start: str | None = None,
     end: str | None = None,
+    parts_dir: Path | None = None,
+    delay_seconds: float = 0.0,
+    error_path: Path | None = None,
 ) -> pd.DataFrame:
     """Download Yahoo share-count events for symbols in a JP daily panel.
 
@@ -74,13 +82,36 @@ def build_yfinance_shares_sidecar(
     if not required.issubset(daily_panel.columns):
         raise ValueError("daily_panel requires symbol and date columns")
 
+    import time
+
+    parts = Path(parts_dir) if parts_dir else None
+    if parts:
+        parts.mkdir(parents=True, exist_ok=True)
+    completed = {path.stem for path in parts.glob("*.parquet")} if parts else set()
     rows: list[pd.DataFrame] = []
-    for code, group in daily_panel.groupby("symbol", sort=True):
-        ticker = yf.Ticker(jp_code_to_yahoo_symbol(code))
-        events = ticker.get_shares_full(start=start, end=end)
-        if events is None or len(events) == 0:
-            continue
-        rows.append(build_daily_shares_sidecar(code, events, pd.to_datetime(group["date"]).dt.date))
+    groups = daily_panel.groupby("symbol", sort=True)
+    pending = symbols_pending_download(groups.groups, completed)
+    for code in pending:
+        group = groups.get_group(code)
+        try:
+            ticker = yf.Ticker(jp_code_to_yahoo_symbol(code))
+            events = ticker.get_shares_full(start=start, end=end)
+            if events is None or len(events) == 0:
+                result = pd.DataFrame(columns=["date", "symbol", "shares_outstanding"])
+            else:
+                result = build_daily_shares_sidecar(code, events, pd.to_datetime(group["date"]).dt.date)
+            if parts:
+                result.to_parquet(parts / f"{code}.parquet", index=False)
+            rows.append(result)
+        except Exception as error:  # pragma: no cover - depends on Yahoo response
+            if error_path:
+                with Path(error_path).open("a", encoding="utf-8") as handle:
+                    handle.write(f"{code}\t{type(error).__name__}\t{error}\n")
+        if delay_seconds > 0:
+            time.sleep(delay_seconds)
+
+    if parts:
+        rows = [pd.read_parquet(path) for path in sorted(parts.glob("*.parquet"))]
 
     result = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(columns=["date", "symbol", "shares_outstanding"])
     result["date"] = pd.to_datetime(result["date"]).dt.date

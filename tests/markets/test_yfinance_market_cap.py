@@ -5,6 +5,7 @@ import pandas as pd
 from market_research.markets.yahoo import (
     build_daily_shares_sidecar,
     jp_code_to_yahoo_symbol,
+    symbols_pending_download,
 )
 
 
@@ -27,3 +28,7 @@ def test_share_events_are_forward_filled_to_requested_trading_dates():
 
     assert result["shares_outstanding"].tolist() == [100, 100, 120]
     assert result["symbol"].tolist() == ["72030", "72030", "72030"]
+
+
+def test_symbols_pending_download_skips_completed_parts():
+    assert symbols_pending_download(["13010", "72030"], {"13010"}) == ["72030"]
