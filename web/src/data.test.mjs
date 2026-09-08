@@ -10,6 +10,8 @@ test("publishes the migrated cross-market liquidity snapshot", () => {
   const summary = JSON.parse(fs.readFileSync(path.join(root, "liquidity/summary.json"), "utf8"));
   assert.deepEqual(summary.markets.map((market) => market.market), ["US", "HK", "A-share"]);
   assert.equal(summary.method.roll_days, 20);
+  assert.equal(summary.method.snapshot_note, "各市场使用最近可用数据，快照日期并不一致");
+  assert.deepEqual(summary.markets.map((market) => market.as_of), ["2025-10-03", "2026-05-26", "2026-09-07"]);
   assert.ok(summary.markets.every((market) => market.buckets.length >= 4));
   assert.deepEqual(summary.periods.map((period) => period.period), ["2020-2024", "2025", "2026 YTD"]);
   assert.ok(summary.periods.every((period) => ["verified", "incomplete"].includes(period.status)));

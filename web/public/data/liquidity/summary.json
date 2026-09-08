@@ -4,11 +4,13 @@
     "metric": "average daily turnover in the latest 20 trading days",
     "currency": "USD",
     "market_cap_anchor": "latest available cross-section",
+    "snapshot_note": "各市场使用最近可用数据，快照日期并不一致",
     "source_project": "market-liquidity-profiles"
   },
   "markets": [
     {
       "market": "US",
+      "as_of": "2025-10-03",
       "eligible_stocks": 6015,
       "sub_100m_count": 1432,
       "sub_100m_median_usd": 121735,
@@ -22,6 +24,7 @@
     },
     {
       "market": "HK",
+      "as_of": "2026-05-26",
       "eligible_stocks": 2522,
       "sub_100m_count": 1362,
       "sub_100m_median_usd": 10776,
@@ -35,6 +38,7 @@
     },
     {
       "market": "A-share",
+      "as_of": "2026-09-07",
       "eligible_stocks": 5321,
       "sub_100m_count": 125,
       "sub_100m_median_usd": 1365126,
