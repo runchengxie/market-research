@@ -23,5 +23,7 @@ test("研究总览使用四个研究域和小微盘子主题", () => {
   assert.match(source, /市场长期风格研究/);
   assert.match(source, /跨市场探索/);
   assert.match(source, /跨市场小微盘流动性/);
+  assert.match(source, /Barra · 18年因子研究/);
+  assert.match(source, /Barra 快照尚未发布到网页/);
   assert.match(source, /navItems/);
 });

@@ -39,7 +39,7 @@ uv run market-research report microcap --config configs/local.toml
 
 ## 当前数据目录
 
-- A 股日频清洗数据：`/home/richard/data/market-data-platform/assets/tushare/a_share/daily`
+- A 股日频清洗数据：`/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20150101_20260907_daily_clean/data`
 - 港股 RQData：`/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk`
 - 美股 SimFin：`/mnt/data/cold4t/simfin/us/extracted/us-shareprices-daily.csv`
 - nira 提供的 JPX、J-Quants 数据：`/mnt/data/cold4t/nira/current/guan-japanese-nira/data`

@@ -1,0 +1,69 @@
+{
+  "analysis": "size factor cross-sectional forward-return monotonicity",
+  "source": {
+    "source": "Tushare A-share daily-clean",
+    "as_of": "2026-09-07",
+    "currency": "CNY",
+    "universe_filter": "positive amount/market cap; non-ST; non-suspended",
+    "fx_method": "native currency",
+    "feature_lag": 1,
+    "coverage_start": "2015-01-05",
+    "coverage_end": "2026-09-07",
+    "calendar_mode": "observed_daily",
+    "quality_status": "verified"
+  },
+  "size_monotonicity": {
+    "quantiles": 10,
+    "holding_period": 1,
+    "monotonicity_score": 0.8888888888888888,
+    "tail_spread": 0.0015311597621559428,
+    "coverage_start": "2015-01-05",
+    "coverage_end": "2026-09-04",
+    "formation_dates": 2838,
+    "eligible_rows": 10842926,
+    "excluded_rows": 16078
+  },
+  "legacy_barra_result": {
+    "source_root": "/home/richard/data/quant/market-data-platform/strategy_outputs/style-factors/weekly-20260904",
+    "schema_version": "research.style-factors.v1",
+    "generated_at": "2026-09-05T02:57:22.351584+00:00",
+    "factor_count": 19,
+    "factors": [
+      "beta",
+      "chip_concentration",
+      "dividend_yield",
+      "earnings_yield",
+      "fund_breadth",
+      "fund_breadth_change",
+      "fund_ownership",
+      "fund_ownership_change",
+      "growth",
+      "institution_holding",
+      "leverage",
+      "liquidity",
+      "liquidity_flow",
+      "lowvol",
+      "momentum",
+      "ps_value",
+      "quality",
+      "size",
+      "value"
+    ],
+    "coverage_start": "2008-01-02",
+    "coverage_end": "2026-09-04",
+    "rebalance_frequency": "month_end",
+    "quantiles": 5,
+    "size_factor": {
+      "factor": "size",
+      "days": 4518,
+      "years": 18.6,
+      "cumulative_ret": -98.88,
+      "annual_ret": -21.42,
+      "geometric_annual_ret": -22.16,
+      "annual_vol": 13.84,
+      "sharpe": -1.74,
+      "max_drawdown": -98.92,
+      "hit_rate": 40.6
+    }
+  }
+}

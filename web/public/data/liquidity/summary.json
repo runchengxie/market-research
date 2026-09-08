@@ -53,8 +53,8 @@
     {"period": "2026 YTD", "status": "incomplete", "common_start": null, "common_end": null, "markets": []}
   ],
   "caveats": [
-    "A股 daily source does not include omitted suspension days, so zero-volume frequency cannot be inferred.",
-    "This is a mechanical liquidity profile, not strategy capacity or realized execution capacity.",
-    "The historical snapshot currently covers US, HK and A-share; JP remains in the unified adapter contract but has no comparable published bucket snapshot here."
+    "A 股日频数据没有记录被省略的停牌日，因此无法仅凭零成交量频率推断停牌情况。",
+    "这里展示的是机械性的流动性画像，不等同于策略容量或实际执行容量。",
+    "当前历史快照覆盖美国、香港和 A 股；日本仍保留在统一适配器契约中，但目前尚未发布可比的分位桶快照。"
   ]
 }

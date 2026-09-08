@@ -63,6 +63,10 @@ h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", 
 .status-badge.incomplete { border-color: #dba58f; color: #b64d33; background: #f8ebe5; }
 .period-meta { margin: 4px 0 14px; color: #81796e; font: 10px "DM Mono", monospace; }
 .callout.compact { margin: 16px 0; padding: 12px 16px; }
+.fine-print { margin: 42px 0 54px; padding-top: 16px; border-top: 1px solid #d8d0c3; color: #8d8579; font-size: 11px; line-height: 1.8; }
+.fine-print p { max-width: 920px; margin: 7px 0 0; }
+.status-panel { margin-top: 36px; }
+.status-panel h3 { margin: 9px 0 0; font: 600 22px "Noto Serif SC", serif; color: #252525; }
 .research-card, .market-card { border-top: 2px solid #252525; padding: 18px 0; }
 .research-card h3 { margin: 10px 0 8px; font: 600 19px "Noto Serif SC", serif; }
 .research-card p, .market-card small { margin: 0; color: #716c63; font-size: 13px; line-height: 1.8; }
