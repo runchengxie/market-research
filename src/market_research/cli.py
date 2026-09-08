@@ -8,6 +8,8 @@ from pathlib import Path
 import pandas as pd
 
 from .barra import analyze_size_monotonicity, load_barra_summary
+from .style_portfolios import build_quantile_returns, summarize_market_factor_evidence
+from .studies.global_six_market.run import run_experiment as run_global_six_market
 from .markets import build_a_share_panel, build_hk_panel, build_jp_panel, build_us_panel
 from .indexes import (
     build_nav,
@@ -49,6 +51,10 @@ def _build_parser() -> argparse.ArgumentParser:
     etf_pairs.add_argument("--config", required=True)
     barra = report_subparsers.add_parser("barra")
     barra.add_argument("--config", required=True)
+    style = report_subparsers.add_parser("style-factors")
+    style.add_argument("--study", required=True)
+    global_six = report_subparsers.add_parser("global-six-market")
+    global_six.add_argument("--study", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
     fetch = subparsers.add_parser("fetch")
@@ -70,6 +76,26 @@ def main(argv: list[str] | None = None) -> int:
         raise
     if args.command == "config" and args.config_command == "inspect":
         print(json.dumps({"output_root": str(Path(args.output_root).expanduser().resolve())}))
+        return 0
+    if args.command == "report" and args.report_command == "style-factors":
+        study = _load_yaml(Path(args.study))
+        panel_path = Path(str(study.get("panel_path", "")))
+        if not panel_path.is_file():
+            raise RuntimeError("style study panel_path must point to an external CSV")
+        panel = pd.read_csv(panel_path)
+        factor = str(study.get("factor_column", "factor"))
+        rows = build_quantile_returns(panel, factor, int(study.get("quantiles", 10)), int(study.get("holding_period", 1)))
+        summary = summarize_market_factor_evidence(rows, factor, {"study_id": study.get("study_id"), "window_years": study.get("window_years")})
+        output = Path(str(study.get("output_root", "outputs")))
+        output.mkdir(parents=True, exist_ok=True)
+        rows.to_csv(output / "style_factor_quantiles.csv", index=False)
+        (output / "style_factor_summary.json").write_text(json.dumps(summary, indent=2, default=str) + "\n", encoding="utf-8")
+        return 0
+    if args.command == "report" and args.report_command == "global-six-market":
+        study_path = Path(args.study)
+        study = _load_yaml(study_path)
+        output = Path(str(study.get("output_root", "outputs/global_six_market")))
+        run_global_six_market(study_path, output)
         return 0
     if args.command == "validate":
         config = _load_config(Path(args.config))
@@ -249,6 +275,16 @@ def _load_config(path: Path) -> dict[str, object]:
         config = tomllib.load(handle)
     config.setdefault("sources", {})
     return config
+
+
+def _load_yaml(path: Path) -> dict[str, object]:
+    import yaml
+
+    with path.open(encoding="utf-8") as handle:
+        value = yaml.safe_load(handle) or {}
+    if not isinstance(value, dict):
+        raise ValueError(f"study config must be a mapping: {path}")
+    return value
 
 
 def _configured_source_names(config: dict[str, object]) -> set[str]:

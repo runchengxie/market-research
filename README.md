@@ -51,6 +51,11 @@ uv run market-research report barra --config configs/local.toml
 
 该命令输出历史 19 因子摘要，以及基于 canonical A 股面板重新计算的市值分位收益和尾部单调性诊断。历史报告原本只有五分位多空结果；十分位/二十分位的纯市值单调性应以新输出为准。
 
+市场证据层的 18 年风格研究和六市场 ETF proxy allocation study 位于
+`studies/`；alpha、signal、IC/decay 和策略决策仍属于 `quant-research`，
+通用回测与执行模拟仍属于 `quant-platform`。六市场研究保持
+`exploration`，不提交订单，也不把 ETF proxy 结果等同于完整国家股票市场。
+
 ## GitHub Pages
 
 公开页面只使用派生文件，不发布原始行情、机器路径和凭证。运行本地页面：
