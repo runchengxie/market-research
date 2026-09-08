@@ -22,11 +22,51 @@ type LiquiditySummary = { method: { roll_days: number; metric: string; currency:
 type BarraSummary = { source?: { coverage_start?: string; coverage_end?: string }; size_monotonicity?: { quantiles?: number; tail_spread?: number; monotonicity_score?: number; formation_dates?: number }; legacy_barra_result?: { factor_count?: number } };
 type HistoricalFactor = { factor: string; days: number; years: number; cumulative_ret: number; geometric_annual_ret: number; annual_vol: number; sharpe: number; max_drawdown: number; hit_rate: number };
 type CorrelationMatrix = Record<string, Record<string, number>>;
+type DiagnosticView = "daily" | "monthly" | "stage";
 
 const DATA = "./data";
 const pct = (value: number | null | undefined) => value == null || Number.isNaN(value) ? "—" : `${(value * 100).toFixed(1)}%`;
 const num = (value: number | string | null | undefined) => value == null || value === "" || Number.isNaN(Number(value)) ? "—" : new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(Number(value));
 const asNumber = (value: string | undefined) => value == null || value === "" ? NaN : Number(value);
+
+function average(values: number[]) { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : NaN; }
+function stageForDate(date: string) {
+  const year = Number(date.slice(0, 4));
+  return year <= 2019 ? "2015–2019" : year <= 2024 ? "2020–2024" : "2025–当前";
+}
+function aggregateSizeRows(rows: Row[], period: "month" | "stage") {
+  const groups = new Map<string, number[]>();
+  rows.forEach((row) => {
+    const value = Number(row.forward_return);
+    if (!Number.isFinite(value)) return;
+    const key = `${period === "month" ? row.formation_date.slice(0, 7) : stageForDate(row.formation_date)}|${row.bucket}`;
+    groups.set(key, [...(groups.get(key) ?? []), value]);
+  });
+  return [...groups.entries()].map(([key, values]) => {
+    const [periodLabel, bucket] = key.split("|");
+    return { period: periodLabel, bucket, value: average(values) };
+  });
+}
+function summarizeSizePeriods(rows: Row[], period: "month" | "stage") {
+  const grouped = aggregateSizeRows(rows, period);
+  const periods = [...new Set(grouped.map((row) => row.period))];
+  return periods.map((periodLabel) => {
+    const values = grouped.filter((row) => row.period === periodLabel);
+    const q1 = values.find((row) => row.bucket === "Q1")?.value ?? NaN;
+    const q10 = values.find((row) => row.bucket === "Q10")?.value ?? NaN;
+    return { period: periodLabel, q1, q10, spread: q1 - q10, observations: values.length };
+  });
+}
+
+function SizeDiagnosticPanel({ rows, dailyCurve }: { rows: Row[]; dailyCurve: Row[] }) {
+  const [view, setView] = useState<DiagnosticView>("monthly");
+  const monthly = aggregateSizeRows(rows, "month");
+  const monthlyCurve = [...new Set(monthly.map((row) => row.bucket))].map((bucket) => ({ bucket, value: String(average(monthly.filter((row) => row.bucket === bucket).map((row) => row.value))) }));
+  const stages = summarizeSizePeriods(rows, "stage");
+  const chartRows = view === "daily" ? dailyCurve : view === "monthly" ? monthlyCurve : stages.map((row) => ({ bucket: row.period, value: String(row.spread) }));
+  const formatter = (value: number) => `${(value * 100).toFixed(2)}%`;
+  return <><Panel title="补充：当前市值分位诊断" tag="描述性诊断 · 非完整 18 年因子结果"><p className="panel-note">这部分基于当前 canonical A 股 daily-clean 面板重新计算，覆盖 {rows[0]?.formation_date ?? "—"} 至 {rows.at(-1)?.formation_date ?? "—"}。日频结果用于观察排序方向，月频和阶段结果用于检查这种方向是否较稳定；三者都不替代历史 19 因子报告。</p><BarChart rows={dailyCurve} labelKey="bucket" valueKey="value" color="#b64d33" formatter={formatter}/><p className="panel-note">上图是形成日分组后的下一交易日平均收益。日频噪音较大，形成日数量不等于独立样本数量。</p><SortableTable rows={rows} columns={[["formation_date", "形成日"], ["bucket", "市值分位"], ["forward_return", "未来收益"], ["count", "股票数"]]} percentColumns={["forward_return"]}/></Panel><Panel title="稳定性观察：月频与阶段" tag="用于降低日频噪音"><p className="panel-note">月频结果先在每个月内平均，再对月份等权；阶段图展示 Q1 减 Q10 的平均差异。它们仍是描述性统计，没有进行 HAC 标准误、区块 Bootstrap 或正式显著性检验。</p><ControlBar><span className="control-label">观察口径</span><Choice active={view === "daily"} onClick={() => setView("daily")}>日频分位</Choice><Choice active={view === "monthly"} onClick={() => setView("monthly")}>月频分位</Choice><Choice active={view === "stage"} onClick={() => setView("stage")}>阶段尾差</Choice></ControlBar>{view === "stage" ? <><BarChart rows={chartRows} labelKey="bucket" valueKey="value" color="#1267d6" formatter={formatter}/><SimpleTable rows={stages.map((row) => ({ period: row.period, q1: formatter(row.q1), q10: formatter(row.q10), spread: formatter(row.spread), observations: String(row.observations) }))} columns={[["period", "阶段"], ["q1", "Q1平均"], ["q10", "Q10平均"], ["spread", "Q1−Q10"], ["observations", "分位数"]]} /></> : <BarChart rows={chartRows} labelKey="bucket" valueKey="value" color="#1267d6" formatter={formatter}/>}</Panel></>;
+}
 
 function parseCsv(text: string): Row[] {
   const rows: string[][] = [];
@@ -159,7 +199,7 @@ function BarraPage() {
   const selectedYearly = yearly.filter((row) => row.factor === selectedFactor).map((row) => ({ year: row.year, value: String(asNumber(row.annual_ret) / 100) }));
   const related = Object.entries(correlations[selectedFactor] ?? {}).filter(([factor]) => factor !== selectedFactor).sort(([, left], [, right]) => Math.abs(right) - Math.abs(left)).slice(0, 8).map(([factor, value]) => ({ factor: FACTOR_NAMES[factor] ?? factor, correlation: String(value) }));
   const selectedFactorSummary = factors.find((factor) => factor.factor === selectedFactor);
-  return <><ThemeHeading kicker="历史研究档案 · Barra 风格因子" title="把长期风格现象还原成一份可阅读的历史研究。" text="页面完整呈现历史结果包中的研究问题、因子定义、长期表现、逐年收益、相关性与数据覆盖；市值分位是补充分析。" asof="历史样本 2008-01-02 至 2026-09-04"/><div className="callout research-status"><span className="section-kicker">研究性质</span><h3>历史描述性证据，不是策略晋升结论</h3><p>这份研究回答“过去的市场风格现象是什么”，不回答“未来是否还能赚钱”。年化收益、Sharpe 和命中率是样本内描述，没有进行正式显著性检验、Bootstrap 或多重检验校正。</p></div><SectionHeading title="研究问题与方法" text="先说明研究对象，再阅读数字，避免把历史结果误读成未来预测。"/><div className="research-grid"><ResearchCard title="研究对象" text="研究 19 个 A 股横截面风格因子，按形成日可见信息分层，最高 20% 与最低 20% 组合在月末等权建仓并持有至下一个月末。"/><ResearchCard title="行业处理" text="因子先按历史生效区间匹配的申万一级行业去均值，再进行全市场标准化；缺少行业匹配的股票作为残差组处理。"/><ResearchCard title="样本口径" text="大部分基础因子覆盖约 18.6 年；机构持仓、筹码和公募持仓类因子只有约 11 年或更短，资金流因子仅约 0.6 年。"/></div><Panel title="因子定义与方向" tag="历史研究方法"><SimpleTable rows={FACTOR_DEFINITIONS} columns={[["name", "因子"], ["direction", "方向"], ["method", "构造方法"]]} /></Panel><Panel title="19 个因子表现总览" tag="历史样本描述"><SortableTable rows={factorRows} columns={[["factor", "因子"], ["coverage", "覆盖"], ["annual", "几何年化"], ["vol", "年化波动"], ["sharpe", "Sharpe"], ["drawdown", "最大回撤"], ["hit", "日胜率"]]} percentColumns={["annual", "vol", "drawdown", "hit"]}/></Panel><Panel title="逐年收益与阶段观察" tag="选择因子"><ControlBar><span className="control-label">因子</span>{factors.map((factor) => <Choice key={factor.factor} active={selectedFactor === factor.factor} onClick={() => setSelectedFactor(factor.factor)}>{FACTOR_NAMES[factor.factor] ?? factor.factor}</Choice>)}</ControlBar><BarChart rows={selectedYearly} labelKey="year" valueKey="value" color="#1267d6"/><p className="panel-note">{FACTOR_NAMES[selectedFactor] ?? selectedFactor}：覆盖 {selectedFactorSummary?.years ?? "—"} 年，几何年化 {pct((selectedFactorSummary?.geometric_annual_ret ?? 0) / 100)}，仅作为历史样本路径阅读。</p></Panel><Panel title="因子相关性" tag="与当前选择因子的相关性"><SimpleTable rows={related} columns={[["factor", "因子"], ["correlation", "相关系数"]]} /></Panel><Panel title="补充：当前市值分位诊断" tag="不是完整 18 年因子结果"><p className="panel-note">这部分基于当前 canonical A 股 daily-clean 面板重新计算，覆盖 {summary.source?.coverage_start ?? "—"} 至 {summary.source?.coverage_end ?? "—"}。它用于补充观察市值尾部排序，不替代上面的历史 19 因子报告；形成日数量为 {num(monotonicity?.formation_dates)}，不是独立样本数量。</p><BarChart rows={quantileCurve} labelKey="bucket" valueKey="value" color="#b64d33"/><SortableTable rows={quantileRows} columns={[["formation_date", "形成日"], ["bucket", "市值分位"], ["forward_return", "未来收益"], ["count", "股票数"]]} percentColumns={["forward_return"]}/></Panel><div className="fine-print"><span className="section-kicker">研究限制</span><p>历史报告使用基础日行情、日频估值和后续重建的历史财务数据；不同因子覆盖期不同，不能把所有因子横向视为同一长度样本。日频收益存在时间相关性，Sharpe、年化收益和逐年表现不等于统计显著性，也不包含手续费、容量、涨跌停、停牌和实际执行约束。</p></div></>;
+  return <><ThemeHeading kicker="历史研究档案 · Barra 风格因子" title="把长期风格现象还原成一份可阅读的历史研究。" text="页面完整呈现历史结果包中的研究问题、因子定义、长期表现、逐年收益、相关性与数据覆盖；市值分位是补充分析。" asof="历史样本 2008-01-02 至 2026-09-04"/><div className="callout research-status"><span className="section-kicker">研究性质</span><h3>历史描述性证据，不是策略晋升结论</h3><p>这份研究回答“过去的市场风格现象是什么”，不回答“未来是否还能赚钱”。年化收益、Sharpe 和命中率是样本内描述，没有进行正式显著性检验、Bootstrap 或多重检验校正。</p></div><SectionHeading title="研究问题与方法" text="先说明研究对象，再阅读数字，避免把历史结果误读成未来预测。"/><div className="research-grid"><ResearchCard title="研究对象" text="研究 19 个 A 股横截面风格因子，按形成日可见信息分层，最高 20% 与最低 20% 组合在月末等权建仓并持有至下一个月末。"/><ResearchCard title="行业处理" text="因子先按历史生效区间匹配的申万一级行业去均值，再进行全市场标准化；缺少行业匹配的股票作为残差组处理。"/><ResearchCard title="样本口径" text="大部分基础因子覆盖约 18.6 年；机构持仓、筹码和公募持仓类因子只有约 11 年或更短，资金流因子仅约 0.6 年。"/></div><Panel title="因子定义与方向" tag="历史研究方法"><SimpleTable rows={FACTOR_DEFINITIONS} columns={[["name", "因子"], ["direction", "方向"], ["method", "构造方法"]]} /></Panel><Panel title="19 个因子表现总览" tag="历史样本描述"><SortableTable rows={factorRows} columns={[["factor", "因子"], ["coverage", "覆盖"], ["annual", "几何年化"], ["vol", "年化波动"], ["sharpe", "Sharpe"], ["drawdown", "最大回撤"], ["hit", "日胜率"]]} percentColumns={["annual", "vol", "drawdown", "hit"]}/></Panel><Panel title="逐年收益与阶段观察" tag="选择因子"><ControlBar><span className="control-label">因子</span>{factors.map((factor) => <Choice key={factor.factor} active={selectedFactor === factor.factor} onClick={() => setSelectedFactor(factor.factor)}>{FACTOR_NAMES[factor.factor] ?? factor.factor}</Choice>)}</ControlBar><BarChart rows={selectedYearly} labelKey="year" valueKey="value" color="#1267d6"/><p className="panel-note">{FACTOR_NAMES[selectedFactor] ?? selectedFactor}：覆盖 {selectedFactorSummary?.years ?? "—"} 年，几何年化 {pct((selectedFactorSummary?.geometric_annual_ret ?? 0) / 100)}，仅作为历史样本路径阅读。</p></Panel><Panel title="因子相关性" tag="与当前选择因子的相关性"><SimpleTable rows={related} columns={[["factor", "因子"], ["correlation", "相关系数"]]} /></Panel><SizeDiagnosticPanel rows={quantileRows} dailyCurve={quantileCurve}/><div className="fine-print"><span className="section-kicker">研究限制</span><p>历史报告使用基础日行情、日频估值和后续重建的历史财务数据；不同因子覆盖期不同，不能把所有因子横向视为同一长度样本。日频收益存在时间相关性，Sharpe、年化收益和逐年表现不等于统计显著性，也不包含手续费、容量、涨跌停、停牌和实际执行约束。</p></div></>;
 }
 
 function CashflowPage() {

@@ -33,6 +33,9 @@ test("研究总览使用四个研究域和小微盘子主题", () => {
   assert.match(source, /Barra · 18年因子研究/);
   assert.match(source, /ResearchBarChart/);
   assert.match(source, /ResearchLineChart/);
+  assert.match(source, /稳定性观察：月频与阶段/);
+  assert.match(source, /区块 Bootstrap/);
+  assert.match(source, /2015–2019/);
   assert.match(source, /搜索表格内容/);
   assert.match(source, /Barra 快照尚未发布到网页/);
   assert.match(source, /navItems/);
