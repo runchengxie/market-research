@@ -77,15 +77,6 @@ h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", 
 .market-card strong { margin: 25px 0 10px; font: 600 21px "Noto Serif SC", serif; }
 .market-card strong.ready { color: #b64d33; }
 .market-card strong.pending { color: #81796e; }
-.bar-chart { display: grid; gap: 11px; padding: 8px 0; }
-.bar-row { display: grid; grid-template-columns: minmax(90px, 170px) 1fr 70px; align-items: center; gap: 10px; font-size: 11px; }
-.bar-row > span { overflow: hidden; color: #716c63; text-overflow: ellipsis; white-space: nowrap; }
-.bar-row strong { color: #403b35; font: 10px "DM Mono", monospace; text-align: right; }
-.bar-track { height: 9px; overflow: hidden; background: #e8e1d6; }
-.bar-track.diverging { position: relative; overflow: visible; background: linear-gradient(90deg, transparent 49.8%, #9a9185 49.8%, #9a9185 50.2%, transparent 50.2%), #e8e1d6; }
-.bar-track i { position: absolute; top: 0; display: block; height: 100%; min-width: 2px; }
-.bar-track i.negative { transform: translateX(-100%); }
-.bar-zero { position: absolute; top: -3px; bottom: -3px; left: 50%; z-index: 1; width: 1px; background: #81796e; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th, td { border-bottom: 1px solid #e2dbd0; padding: 10px 12px; text-align: left; white-space: nowrap; }
