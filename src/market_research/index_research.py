@@ -28,6 +28,19 @@ DEFAULT_CASHFLOW_INDEXES = (
 )
 
 
+def api_for_index_code(ts_code: str) -> str | None:
+    suffix = str(ts_code).upper().split(".")[-1] if "." in str(ts_code) else ""
+    if suffix == "SI":
+        return "sw_daily"
+    if suffix == "CI":
+        return "ci_daily" if str(ts_code).upper().startswith("CI") else "index_daily"
+    if suffix == "TI":
+        return "ths_daily"
+    if suffix in {"SH", "SZ", "BJ"}:
+        return "index_daily"
+    return None
+
+
 def build_index_price_snapshot(index_daily: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
     frame = index_daily.copy()
     frame["trade_date"] = pd.to_datetime(frame["trade_date"].astype(str), format="%Y%m%d", errors="coerce")
@@ -60,6 +73,36 @@ def build_etf_index_pairing(etf_basic: pd.DataFrame, index_catalog: pd.DataFrame
     mapping = index_catalog.drop_duplicates("indx_name").set_index("indx_name")["ts_code"].to_dict()
     eligible["index_ts_code"] = eligible["matched_index_name"].map(mapping)
     return eligible[eligible["index_ts_code"].notna()].reset_index(drop=True)
+
+
+def build_etf_index_metrics(
+    etf_daily: pd.DataFrame, index_daily: pd.DataFrame, etf_code: str, index_code: str, start_date: str, end_date: str
+) -> dict[str, float | str | None]:
+    etf = etf_daily.loc[etf_daily["ts_code"].eq(etf_code)].copy()
+    index = index_daily.loc[index_daily["ts_code"].eq(index_code)].copy()
+    for frame in (etf, index):
+        frame["trade_date"] = pd.to_datetime(frame["trade_date"].astype(str), format="%Y%m%d", errors="coerce")
+    etf = etf.set_index("trade_date").sort_index()
+    index = index.set_index("trade_date").sort_index()
+    start, end = pd.Timestamp(start_date), pd.Timestamp(end_date)
+    etf_window = etf.loc[start:end]
+    index_window = index.loc[start:end]
+    if etf_window.empty or index_window.empty:
+        raise ValueError("ETF and index windows must contain observations")
+    etf_values = pd.to_numeric(etf_window["adj_close"], errors="coerce").dropna()
+    index_values = pd.to_numeric(index_window["close"], errors="coerce").dropna()
+    if etf_values.empty or index_values.empty:
+        raise ValueError("ETF and index windows must contain valid prices")
+    etf_peak = etf_values.cummax()
+    index_peak = index_values.cummax()
+    return {
+        "ts_code": etf_code,
+        "index_ts_code": index_code,
+        "etf_total_return": float(etf_values.iloc[-1] / etf_values.iloc[0] - 1),
+        "etf_max_drawdown": float((etf_values / etf_peak - 1).min()),
+        "index_price_return": float(index_values.iloc[-1] / index_values.iloc[0] - 1),
+        "index_max_drawdown": float((index_values / index_peak - 1).min()),
+    }
 
 
 def build_cashflow_snapshot(raw: pd.DataFrame, indexes=DEFAULT_CASHFLOW_INDEXES) -> dict[str, pd.DataFrame]:

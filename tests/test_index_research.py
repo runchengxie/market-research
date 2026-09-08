@@ -50,3 +50,15 @@ def test_cashflow_snapshot_prefers_total_return_and_marks_missing_history():
     assert set(result) == {"performance", "status", "rebalance_frequency"}
     assert result["performance"].loc[0, "return_basis"] == "gross_total_return"
     assert result["status"].loc[0, "status"] == "available"
+
+
+def test_index_code_routes_to_provider_and_pair_metrics_are_deterministic():
+    from market_research.index_research import api_for_index_code, build_etf_index_metrics
+
+    assert api_for_index_code("801001.SI") == "sw_daily"
+    assert api_for_index_code("000300.SH") == "index_daily"
+    etf = pd.DataFrame({"ts_code": ["510001.SH"] * 2, "trade_date": ["20260102", "20260106"], "adj_close": [100, 110], "amount": [1000, 2000]})
+    index = pd.DataFrame({"ts_code": ["000300.SH"] * 2, "trade_date": ["20260102", "20260106"], "close": [100, 105]})
+    result = build_etf_index_metrics(etf, index, "510001.SH", "000300.SH", "20260102", "20260106")
+    assert result["etf_total_return"] == pytest.approx(0.1)
+    assert result["index_price_return"] == pytest.approx(0.05)

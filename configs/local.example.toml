@@ -9,3 +9,10 @@ hk_valuation_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/valuation"
 hk_instruments_path = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/instruments"
 us_shareprices_path = "/mnt/data/cold4t/simfin/us"
 jp_root = "/mnt/data/cold4t/nira/current/guan-japanese-nira/data"
+
+[index_research]
+# Optional derived/input assets for the migrated index research commands.
+index_daily_path = ""
+linked_index_daily_path = ""
+index_start_date = "20160902"
+index_end_date = "20260821"

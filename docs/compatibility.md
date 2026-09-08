@@ -1,6 +1,6 @@
 # 兼容性与迁移说明
 
-新项目是统一研究入口，旧项目继续保留历史代码、数据和研究记录。
+`market-research` 是 canonical、superseding 的统一研究入口；旧项目继续保留历史代码、数据和研究记录，作为 legacy archive，不再承担独立发布职责。
 
 ## 现有项目
 
@@ -8,7 +8,19 @@
 - `market-liquidity-profiles`：容量适配器、容量数据结构和跨市场流动性结果说明的来源。
 - `nira`：JPX、J-Quants 数据及日本市场专用研究流程的来源。
 
-新实现使用小型确定性样本进行测试。替换旧命令前，仍需完成完整历史数据的口径比对。
+新实现使用小型确定性样本和旧项目纯函数回归测试。完整历史数据的口径比对仍需在有对应本地快照时运行；在该比对完成前，旧项目仍是历史结果的审计参考，不是新的发布入口。
+
+## 输出映射
+
+| Legacy capability | Canonical command/output |
+| --- | --- |
+| Microcap reconstruction and snapshot | `report microcap`; `microcap/` plus legacy-compatible root files |
+| Index price and ETF research | `report indices`; `a_share_index_price_returns.csv` |
+| Cash-flow index snapshot | `report cashflow`; `cashflow_indices/` |
+| Cross-market liquidity buckets | `report liquidity`; `liquidity_summary.csv` and `liquidity_report.json` |
+| Mechanical capacity | `report liquidity`; `capacity_surface.csv` |
+
+Network fetching remains intentionally outside the deterministic core. Fetchers may write derived caches only under configured output roots and must not copy raw market data into Git.
 
 ## 当前差异
 

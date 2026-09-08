@@ -5,6 +5,8 @@ import json
 import tomllib
 from pathlib import Path
 
+import pandas as pd
+
 from .markets import build_a_share_panel, build_hk_panel, build_jp_panel, build_us_panel
 from .indexes import (
     build_nav,
@@ -14,6 +16,8 @@ from .indexes import (
     summarize_nav,
 )
 from .reports import build_liquidity_report, write_report_bundle
+from .microcap import write_microcap_snapshot
+from .index_research import build_cashflow_snapshot, build_index_price_snapshot
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -29,6 +33,10 @@ def _build_parser() -> argparse.ArgumentParser:
     liquidity.add_argument("--config", required=True)
     microcap = report_subparsers.add_parser("microcap")
     microcap.add_argument("--config", required=True)
+    indices = report_subparsers.add_parser("indices")
+    indices.add_argument("--config", required=True)
+    cashflow = report_subparsers.add_parser("cashflow")
+    cashflow.add_argument("--config", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
     return parser
@@ -74,6 +82,7 @@ def main(argv: list[str] | None = None) -> int:
         nav = build_nav(reconstruction)
         nav.to_csv(output_root / "microcap_nav.csv", index=False)
         build_underwater_periods(nav).to_csv(output_root / "microcap_underwater_periods.csv", index=False)
+        write_microcap_snapshot(nav[["date", "nav"]], output_root / "microcap", "market-research A-share rule reconstruction")
         (output_root / "microcap_summary.json").write_text(
             json.dumps(
                 {
@@ -93,6 +102,31 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
         )
         return 0
+    if args.command == "report" and args.report_command == "indices":
+        config = _load_config(Path(args.config))
+        source = _index_research_path(config, "index_daily_path")
+        if source is None:
+            raise RuntimeError("index_research.index_daily_path is required")
+        frame = _read_table(source)
+        start = str(config.get("index_start_date", "20160902"))
+        end = str(config.get("index_end_date", config.get("as_of", "20260821"))).replace("-", "")
+        result = build_index_price_snapshot(frame, start, end)
+        output = Path(config.get("output_root", "outputs"))
+        output.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output / "a_share_index_price_returns.csv", index=False)
+        return 0
+    if args.command == "report" and args.report_command == "cashflow":
+        config = _load_config(Path(args.config))
+        source = _index_research_path(config, "linked_index_daily_path")
+        if source is None:
+            raise RuntimeError("index_research.linked_index_daily_path is required")
+        outputs = build_cashflow_snapshot(_read_table(source))
+        output = Path(config.get("output_root", "outputs")) / "cashflow_indices"
+        output.mkdir(parents=True, exist_ok=True)
+        outputs["performance"].to_csv(output / "cashflow_performance.csv", index=False)
+        outputs["status"].to_csv(output / "cashflow_data_status.csv", index=False)
+        outputs["rebalance_frequency"].to_csv(output / "cashflow_rebalance_frequency.csv", index=False)
+        return 0
     if args.command is None:
         parser.print_help()
     return 0
@@ -110,6 +144,18 @@ def _configured_source_names(config: dict[str, object]) -> set[str]:
     if not isinstance(sources, dict):
         return set()
     return {name for name, value in sources.items() if value and Path(str(value)).exists()}
+
+
+def _index_research_path(config: dict[str, object], key: str) -> Path | None:
+    section = config.get("index_research", {})
+    if not isinstance(section, dict) or not section.get(key):
+        return None
+    path = Path(str(section[key])).expanduser()
+    return path if path.exists() else None
+
+
+def _read_table(path: Path) -> pd.DataFrame:
+    return pd.read_parquet(path) if path.suffix == ".parquet" else pd.read_csv(path)
 
 
 def _build_configured_panels(config: dict[str, object]):
