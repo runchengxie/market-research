@@ -1,0 +1,55 @@
+{
+  "method": {
+    "roll_days": 20,
+    "metric": "average daily turnover in the latest 20 trading days",
+    "currency": "USD",
+    "market_cap_anchor": "latest available cross-section",
+    "source_project": "market-liquidity-profiles"
+  },
+  "markets": [
+    {
+      "market": "US",
+      "eligible_stocks": 6015,
+      "sub_100m_count": 1432,
+      "sub_100m_median_usd": 121735,
+      "buckets": [
+        { "label": "< $10m", "count": 511, "median_usd": 11162, "mean_usd": 2629317, "p90_usd": 3886671 },
+        { "label": "$10m-$100m", "count": 921, "median_usd": 180071, "mean_usd": 1316120, "p90_usd": 1983502 },
+        { "label": "$100m-$1bn", "count": 1819, "median_usd": 2439173, "mean_usd": 7992559, "p90_usd": 15162042 },
+        { "label": "$1bn-$10bn", "count": 1807, "median_usd": 37047661, "mean_usd": 65009048, "p90_usd": 136822283 },
+        { "label": ">= $10bn", "count": 957, "median_usd": 235945115, "mean_usd": 582916169, "p90_usd": 1002255305 }
+      ]
+    },
+    {
+      "market": "HK",
+      "eligible_stocks": 2522,
+      "sub_100m_count": 1362,
+      "sub_100m_median_usd": 10776,
+      "buckets": [
+        { "label": "< $10m", "count": 261, "median_usd": 5042, "mean_usd": 18890 },
+        { "label": "$10m-$100m", "count": 1101, "median_usd": 13004, "mean_usd": 50298 },
+        { "label": "$100m-$1bn", "count": 699, "median_usd": 181899, "mean_usd": 1245259 },
+        { "label": "$1bn-$10bn", "count": 368, "median_usd": 6010845, "mean_usd": 11791965 },
+        { "label": ">= $10bn", "count": 93, "median_usd": 21766541, "mean_usd": 41237697 }
+      ]
+    },
+    {
+      "market": "A-share",
+      "eligible_stocks": 5321,
+      "sub_100m_count": 125,
+      "sub_100m_median_usd": 1365126,
+      "buckets": [
+        { "label": "< $10m", "count": 16, "median_usd": 813238, "mean_usd": 1251180 },
+        { "label": "$10m-$100m", "count": 161, "median_usd": 1446068, "mean_usd": 2137422 },
+        { "label": "$100m-$1bn", "count": 2823, "median_usd": 8992347, "mean_usd": 13997260 },
+        { "label": "$1bn-$10bn", "count": 2166, "median_usd": 40430509, "mean_usd": 72468542 },
+        { "label": ">= $10bn", "count": 295, "median_usd": 243015757, "mean_usd": 463049830 }
+      ]
+    }
+  ],
+  "caveats": [
+    "A股 daily source does not include omitted suspension days, so zero-volume frequency cannot be inferred.",
+    "This is a mechanical liquidity profile, not strategy capacity or realized execution capacity.",
+    "The historical snapshot currently covers US, HK and A-share; JP remains in the unified adapter contract but has no comparable published bucket snapshot here."
+  ]
+}
