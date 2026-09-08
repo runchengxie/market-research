@@ -50,3 +50,19 @@ def test_write_report_bundle_writes_json_and_csv(tmp_path: Path):
     assert (tmp_path / "liquidity_summary.csv").exists()
     assert (tmp_path / "coverage_diagnostics.csv").exists()
     assert (tmp_path / "capacity_surface.csv").exists()
+
+
+def test_build_liquidity_periods_uses_period_dates_and_reports_common_coverage():
+    from market_research.reports import build_liquidity_periods
+
+    dates = pd.date_range("2020-01-01", periods=22, freq="D")
+    panel = pd.DataFrame({
+        "market": "us", "symbol": ["A"] * len(dates), "date": dates,
+        "close": 1.0, "volume": 100.0, "turnover": 100.0,
+        "market_cap": 1_000_000.0, "currency": "USD", "is_tradable": True,
+        "is_suspended": False, "source": "fixture",
+    })
+    result = build_liquidity_periods({"us": panel}, {"fixture": ("2020-01-01", "2020-12-31")})
+    assert result[0]["period"] == "fixture"
+    assert result[0]["common_start"] == "2020-01-01"
+    assert result[0]["markets"][0]["status"] == "verified"

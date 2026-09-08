@@ -11,6 +11,8 @@ test("publishes the migrated cross-market liquidity snapshot", () => {
   assert.deepEqual(summary.markets.map((market) => market.market), ["US", "HK", "A-share"]);
   assert.equal(summary.method.roll_days, 20);
   assert.ok(summary.markets.every((market) => market.buckets.length >= 4));
+  assert.deepEqual(summary.periods.map((period) => period.period), ["2020-2024", "2025", "2026 YTD"]);
+  assert.ok(summary.periods.every((period) => ["verified", "incomplete"].includes(period.status)));
 });
 
 test("does not publish the retired animal index dataset", () => {

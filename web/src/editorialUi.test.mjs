@@ -16,3 +16,12 @@ test("微盘页面保留旧版研究阅读顺序和图表组件", () => {
   assert.match(charts, /AnnualChart/);
   assert.match(charts, /UnderwaterChart/);
 });
+
+test("研究总览使用四个研究域和小微盘子主题", () => {
+  assert.match(source, /现金流策略探索/);
+  assert.match(source, /小微盘策略探索/);
+  assert.match(source, /市场长期风格研究/);
+  assert.match(source, /跨市场探索/);
+  assert.match(source, /跨市场小微盘流动性/);
+  assert.match(source, /navItems/);
+});
