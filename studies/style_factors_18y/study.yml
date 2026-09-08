@@ -1,0 +1,8 @@
+study_id: style_factors_18y
+window_years: 18
+evidence_status: derived
+quantiles: 10
+holding_period: 1
+rebalance_frequency: month_end
+factor_families: [size, value, momentum, liquidity]
+raw_data_in_git: false

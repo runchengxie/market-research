@@ -1,0 +1,12 @@
+schema_version: global_six_market.v1
+experiment_id: global_six_market_v1
+lifecycle: exploration
+production_eligible: false
+automatic_promotion_allowed: false
+data_root: /external/configure/locally
+base_currency: USD
+rebalance_frequency: monthly
+markets: [US, HK, UK, AU, CA, SG]
+target_weights: {US: 0.35, HK: 0.20, UK: 0.15, AU: 0.10, CA: 0.10, SG: 0.10}
+asset_proxies: {US: SPY, HK: 2800, UK: ISF, AU: STW, CA: XIU, SG: ES3}
+raw_data_in_git: false
