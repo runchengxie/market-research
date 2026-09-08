@@ -1,8 +1,13 @@
-import { StrictMode, useEffect, useState } from "react";
+import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-import { AnnualChart, MetricChart, NavChart, UnderwaterChart } from "./components/MicrocapCharts";
-import { ResearchBarChart, ResearchLineChart } from "./components/ResearchCharts";
+
+const NavChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.NavChart })));
+const AnnualChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.AnnualChart })));
+const MetricChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.MetricChart })));
+const UnderwaterChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.UnderwaterChart })));
+const ResearchBarChart = lazy(() => import("./components/ResearchCharts").then((module) => ({ default: module.ResearchBarChart })));
+const ResearchLineChart = lazy(() => import("./components/ResearchCharts").then((module) => ({ default: module.ResearchLineChart })));
 
 type Row = Record<string, string>;
 type MicrocapSummary = { metrics: { ytd_2026_as_of?: string; ytd_2026_reference?: string }; caveats?: string[] };
@@ -236,4 +241,4 @@ function App() {
 
 function Overview() { return <><ThemeHeading kicker="历史研究档案 · 目录" title="先回顾已经形成的证据，再查看正在推进的专题。" text="market-research 以历史市场研究为主线，公开可复核的派生快照；研究中的专题和待补数据会单独标注。" asof="公开快照"/><section className="overview-grid"><a href="#cashflow"><span className="section-kicker">01 · 历史研究</span><h3>现金流历史研究</h3><p>回顾现金流、股息和调仓频率在不同回报口径与持有窗口下的表现。</p><b>进入档案 ↗</b></a><a href="#microcap"><span className="section-kicker">02 · 历史研究</span><h3>小微盘历史研究</h3><p>A股小微盘规则重建与跨市场小微盘流动性，分别通过两个子主题阅读。</p><b>进入档案 ↗</b></a><a href="#style"><span className="section-kicker">03 · 历史研究</span><h3>长期风格历史研究</h3><p>指数、ETF、Barra 和 18 年因子研究，放在同一条历史证据线上。</p><b>进入档案 ↗</b></a><a href="#cross-market"><span className="section-kicker">04 · 研究中的专题</span><h3>跨市场流动性研究</h3><p>比较不同市场小市值尾部的流动性；共同覆盖和日股数据状态会明确展示。</p><b>查看进展 ↗</b></a></section><section className="research-grid"><ResearchCard title="历史研究优先" text="页面首先承载已经完成的市场研究文档和可复核快照，不把未来假设包装成历史事实。"/><ResearchCard title="描述性证据" text="ETF 作为市场代理、指数表现和 18 年因子现象用于描述市场，不等同于 alpha 或策略晋升。"/><ResearchCard title="研究状态优先" text="每个专题保留来源、样本区间和限制条件；日频观察数量不自动等于独立样本数量。"/></section><div className="fine-print"><span className="section-kicker">数据与研究边界</span><p>策略研究、历史市场证据和通用平台能力分开维护；原始行情不发布，跨市场比较不把缺失市场补成零。Global Six-Market 等尚未形成完整快照的内容归入待补数据与未来研究。</p></div></>; }
 
-createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
+createRoot(document.getElementById("root")!).render(<StrictMode><Suspense fallback={<Loading />}><App /></Suspense></StrictMode>);
