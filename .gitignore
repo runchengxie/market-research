@@ -14,3 +14,6 @@ __pycache__/
 *.tar
 *.tar.zst
 *.zip
+
+# Public derived dashboard snapshots are intentionally versioned.
+!web/public/data/**/*.csv

@@ -1,0 +1,9 @@
+ts_code,name,universe,rebalance_frequency,note
+980092.SZ,国证自由现金流,Broad A-share / red-chip,quarterly,current rule; changed 2024-08-15
+932365.CSI,中证全指自由现金流,CSI All Share,quarterly,100 constituents
+932366.CSI,300现金流,CSI 300,quarterly,50 constituents
+932367.CSI,500现金流,CSI 500,quarterly,50 constituents
+932368.CSI,800现金流,CSI 800,quarterly,50 constituents
+932369.CSI,1000现金流,CSI 1000,quarterly,100 constituents
+931082.CSI,A500现金流,CSI A500,quarterly,50 constituents
+932457.CSI,港股通现金流,Hong Kong Connect,semiannual,50 constituents; HKD

@@ -1,0 +1,11 @@
+as_of,window_years,max_drawdown,frequency
+2025-12-31,3,-0.2544,monthly
+2025-12-31,5,-0.2544,monthly
+2025-12-31,10,-0.3730,monthly
+2025-12-31,15,-0.3730,monthly
+2025-12-31,20,-0.6375,monthly
+2025-12-31,3,-0.4673,daily_reference
+2025-12-31,5,-0.4673,daily_reference
+2025-12-31,10,-0.4673,daily_reference
+2025-12-31,15,-0.4817,daily_reference
+2025-12-31,20,-0.6608,daily_reference

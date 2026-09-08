@@ -1,0 +1,9 @@
+ts_code,name,source_code,return_basis,status,coverage_start,coverage_end,rows
+980092.SZ,国证自由现金流,980092.SZ,price_return,available,2012-12-31,2026-09-04,3322
+932365.CSI,中证全指自由现金流,932365CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+932366.CSI,300现金流,932366CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+932367.CSI,500现金流,932367CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+932368.CSI,800现金流,932368CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+932369.CSI,1000现金流,932369CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+931082.CSI,A500现金流,931082CNY010.CSI,gross_total_return,available,2013-12-31,2026-09-04,3084
+932457.CSI,港股通现金流,932457HKD210.CSI,gross_total_return,available,2018-12-28,2026-09-04,1978

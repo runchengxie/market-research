@@ -1,0 +1,7 @@
+api,label,status,rows,min_date,max_date
+index_daily,普通指数,ok,2828,20150105,20260821
+sw_daily,申万行业,ok,2828,20150105,20260821
+ci_daily,中信行业,ok,2828,20150105,20260821
+ths_daily,同花顺板块,ok,1488,20190128,20260821
+index_global,国际指数,ok,2926,20150102,20260821
+etf_index,ETF跟踪指数,ok,560,,
