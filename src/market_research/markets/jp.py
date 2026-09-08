@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from collections.abc import Iterable
 
 import pandas as pd
 
@@ -16,11 +17,13 @@ def build_jp_panel(
     as_of: str | None = None,
     fx_rate: float | None = None,
     market_cap_path: Path | None = None,
+    symbols: Iterable[str] | None = None,
 ) -> tuple[pd.DataFrame, PanelMetadata]:
     market_caps = _read_market_caps(market_cap_path) if market_cap_path else None
+    symbol_filter = {str(symbol).zfill(5) for symbol in symbols} if symbols is not None else None
     rows: list[pd.DataFrame] = []
     for source in discover_jp_daily_files(Path(data_root)):
-        frame = pd.read_parquet(source)
+        frame = pd.read_parquet(source, columns=["Date", "Code", "C", "Vo", "Va"])
         required = {"Date", "Code", "C", "Vo", "Va"}
         if not required.issubset(frame.columns):
             continue
@@ -30,13 +33,18 @@ def build_jp_panel(
         if frame.empty:
             continue
         frame["symbol"] = frame["Code"].map(_normalize_code)
+        if symbol_filter is not None:
+            frame = frame.loc[frame["symbol"].isin(symbol_filter)]
+            if frame.empty:
+                continue
         frame["close"] = pd.to_numeric(frame["C"], errors="coerce")
         frame["volume"] = pd.to_numeric(frame["Vo"], errors="coerce")
         frame["turnover"] = pd.to_numeric(frame["Va"], errors="coerce")
         frame["market_cap"] = pd.NA
         if market_caps is not None:
             frame = frame.merge(market_caps, on=["date", "symbol"], how="left", suffixes=("", "_sidecar"))
-            frame["market_cap"] = pd.to_numeric(frame["market_cap_sidecar"], errors="coerce")
+            if "market_cap_sidecar" in frame.columns:
+                frame["market_cap"] = pd.to_numeric(frame["market_cap_sidecar"], errors="coerce")
         if market_caps is not None and "shares_outstanding" in market_caps.columns:
             frame["market_cap"] = frame["market_cap"].fillna(frame["close"] * pd.to_numeric(frame["shares_outstanding"], errors="coerce"))
         rows.append(
