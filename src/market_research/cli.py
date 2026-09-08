@@ -20,6 +20,7 @@ from .microcap import write_microcap_snapshot
 from .index_research import (
     build_cashflow_snapshot,
     build_etf_proxy_returns,
+    build_etf_pair_report,
     build_index_price_snapshot,
     fetch_linked_indices,
     refresh_cashflow_indices,
@@ -43,6 +44,8 @@ def _build_parser() -> argparse.ArgumentParser:
     indices.add_argument("--config", required=True)
     cashflow = report_subparsers.add_parser("cashflow")
     cashflow.add_argument("--config", required=True)
+    etf_pairs = report_subparsers.add_parser("etf-pairs")
+    etf_pairs.add_argument("--config", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
     fetch = subparsers.add_parser("fetch")
@@ -156,6 +159,25 @@ def main(argv: list[str] | None = None) -> int:
         outputs["performance"].to_csv(output / "cashflow_performance.csv", index=False)
         outputs["status"].to_csv(output / "cashflow_data_status.csv", index=False)
         outputs["rebalance_frequency"].to_csv(output / "cashflow_rebalance_frequency.csv", index=False)
+        return 0
+    if args.command == "report" and args.report_command == "etf-pairs":
+        config = _load_config(Path(args.config))
+        required = {key: _index_research_path(config, key) for key in ("index_catalog_path", "etf_basic_path", "etf_daily_path", "etf_adj_factor_path", "index_daily_path")}
+        if any(path is None for path in required.values()):
+            raise RuntimeError("index_research index catalog, ETF basic/daily/adjustment, and index daily paths are required")
+        section = config.get("index_research", {})
+        start = str(section.get("index_start_date", "20160902")) if isinstance(section, dict) else "20160902"
+        end = str(section.get("index_end_date", "20260821")) if isinstance(section, dict) else "20260821"
+        reports = build_etf_pair_report(
+            _read_table(required["etf_basic_path"]), _read_table(required["index_catalog_path"]),
+            _read_table(required["etf_daily_path"]), _read_table(required["etf_adj_factor_path"]),
+            _read_table(required["index_daily_path"]), start, end,
+        )
+        output = Path(config.get("output_root", "outputs")) / "linked_indices"
+        output.mkdir(parents=True, exist_ok=True)
+        reports["pairing"].to_csv(output / "etf_index_pairing.csv", index=False)
+        reports["all"].to_csv(output / "paired_index_etf_returns_all.csv", index=False)
+        reports["representatives"].to_csv(output / "paired_index_etf_representatives.csv", index=False)
         return 0
     if args.command is None:
         parser.print_help()

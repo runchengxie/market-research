@@ -33,12 +33,13 @@ uv run market-research config inspect --output-root outputs
 ```bash
 uv run market-research report microcap --config configs/local.toml
 uv run market-research report indices --config configs/local.toml
+uv run market-research report etf-pairs --config configs/local.toml
 uv run market-research report cashflow --config configs/local.toml
 uv run market-research report liquidity --config configs/local.toml
 uv run market-research validate --config configs/local.toml
 ```
 
-`microcap` 还会生成旧项目公开快照所需的年度收益、滚动 CAGR、滚动回撤和来源标记文件；`indices` 和 `cashflow` 分别覆盖指数/ETF 研究与现金流指数研究。迁移输出的命名兼容旧项目，但生成入口统一为本项目。
+`microcap` 还会生成旧项目公开快照所需的年度收益、滚动 CAGR、滚动回撤和来源标记文件；`indices` 覆盖指数价格回报和 ETF 复权代理，`etf-pairs` 覆盖指数/ETF 配对、全部比较和流动性代表，`cashflow` 覆盖现金流指数研究。迁移输出的命名兼容旧项目，但生成入口统一为本项目。
 
 ## GitHub Pages
 

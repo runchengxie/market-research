@@ -16,6 +16,7 @@
 | --- | --- |
 | Microcap reconstruction and snapshot | `report microcap`; `microcap/` plus legacy-compatible root files |
 | Index price and ETF research | `report indices`; `a_share_index_price_returns.csv` |
+| ETF/index pairing and ranking | `report etf-pairs`; `linked_indices/` |
 | Cash-flow index snapshot | `report cashflow`; `cashflow_indices/` |
 | Cross-market liquidity buckets | `report liquidity`; `liquidity_summary.csv` and `liquidity_report.json` |
 | Mechanical capacity | `report liquidity`; `capacity_surface.csv` |

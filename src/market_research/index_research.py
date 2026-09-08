@@ -197,6 +197,37 @@ def build_etf_proxy_returns(
     return pd.DataFrame(rows, columns=["ts_code", "name", "benchmark", "list_date", "p0", "p1", "total_return", "cagr"]).sort_values("cagr", ascending=False).reset_index(drop=True)
 
 
+def build_etf_pair_report(
+    etf_basic: pd.DataFrame, index_catalog: pd.DataFrame, etf_daily: pd.DataFrame, etf_adj_factor: pd.DataFrame,
+    index_daily: pd.DataFrame, start_date: str, end_date: str, min_median_amount: float = 10_000,
+) -> dict[str, pd.DataFrame]:
+    etf_daily = etf_daily.copy()
+    if "adj_close" not in etf_daily.columns:
+        factors = etf_adj_factor[["ts_code", "trade_date", "adj_factor"]].copy()
+        for frame in (etf_daily, factors):
+            frame["trade_date"] = frame["trade_date"].astype(str).str.replace("-", "", regex=False)
+        etf_daily = etf_daily.merge(factors, on=["ts_code", "trade_date"], how="left")
+        etf_daily["adj_close"] = pd.to_numeric(etf_daily["close"], errors="coerce") * pd.to_numeric(etf_daily["adj_factor"], errors="coerce")
+    pairing = build_etf_index_pairing(etf_basic, index_catalog, int(start_date))
+    rows = []
+    for row in pairing.itertuples(index=False):
+        try:
+            metric = build_etf_index_metrics(etf_daily, index_daily, row.ts_code, row.index_ts_code, start_date, end_date)
+        except ValueError:
+            continue
+        amounts = etf_daily.loc[etf_daily["ts_code"].eq(row.ts_code)].copy()
+        amounts["trade_date"] = amounts["trade_date"].astype(str).str.replace("-", "", regex=False)
+        recent = pd.to_numeric(amounts.loc[amounts["trade_date"].le(str(end_date)), "amount"], errors="coerce").dropna().tail(60)
+        rows.append({**row._asdict(), **metric, "median_amount_60d": float(recent.median()) if not recent.empty else None})
+    all_pairs = pd.DataFrame(rows)
+    if all_pairs.empty:
+        all_pairs = pd.DataFrame(columns=[*pairing.columns, "etf_total_return", "etf_max_drawdown", "index_price_return", "index_max_drawdown", "median_amount_60d", "liquid_10m"])
+    else:
+        all_pairs["liquid_10m"] = all_pairs["median_amount_60d"].ge(min_median_amount)
+    representatives = all_pairs.loc[all_pairs["liquid_10m"]].sort_values(["index_ts_code", "median_amount_60d", "etf_total_return"], ascending=[True, False, False]).drop_duplicates("index_ts_code").sort_values("etf_total_return", ascending=False).reset_index(drop=True)
+    return {"pairing": pairing, "all": all_pairs, "representatives": representatives}
+
+
 def build_cashflow_snapshot(raw: pd.DataFrame, indexes=DEFAULT_CASHFLOW_INDEXES) -> dict[str, pd.DataFrame]:
     frame = raw.copy()
     frame["date"] = pd.to_datetime(frame["trade_date"].astype(str), format="%Y%m%d", errors="coerce")
