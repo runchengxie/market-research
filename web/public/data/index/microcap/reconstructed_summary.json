@@ -1,0 +1,17 @@
+{
+  "source_label": "Tushare 规则重建（研究版）",
+  "method": "上海、深圳 A 股中按总市值选取最小 400 只，等权持有至下一交易日",
+  "coverage_start": "20150105",
+  "coverage_end": "20260903",
+  "observations": 2837,
+  "max_drawdown": -0.5127186139,
+  "longest_underwater_trading_days": 317,
+  "longest_underwater_start": "20171113",
+  "longest_underwater_end": "20190305",
+  "underwater_episode_count": 162,
+  "caveats": [
+    "这是基于本地 Tushare 日线数据的规则重建，不是 Wind 8841431.WI 官方指数。",
+    "使用复权收盘价计算，当前版本未模拟涨跌停无法成交、手续费、印花税、冲击成本和资金容量。",
+    "调仓信号使用当日总市值，收益从下一交易日收盘价计算，保留了一天的持有滞后。"
+  ]
+}

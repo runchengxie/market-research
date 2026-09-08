@@ -1,0 +1,25 @@
+{
+  "as_of": "2025-12-31",
+  "source_label": "公开资料参考口径",
+  "coverage_start": "2000",
+  "coverage_end": "2025",
+  "index_code": "8841431.WI",
+  "metrics": {
+    "cumulative_nav": 573.93128,
+    "annual_return": 0.8165,
+    "ytd_2026_reference": 0.077,
+    "ytd_2026_as_of": "2026-08-28",
+    "cagr_3y": 0.4414,
+    "cagr_5y": 0.371,
+    "cagr_10y": 0.2138,
+    "cagr_15y": 0.3041,
+    "cagr_20y": 0.3869,
+    "monthly_drawdown_20y": -0.6375,
+    "daily_reference_drawdown_20y": -0.6608
+  },
+  "caveats": [
+    "1999 年至 2021 年 3 月以前的历史主要属于回溯数据。",
+    "月频最大回撤会低估日内和日间回撤。",
+    "公开资料参考口径不是 Tushare 直接返回的 Wind 原始序列。"
+  ]
+}

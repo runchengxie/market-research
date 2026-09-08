@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatPercent, summarizeNav } from "./dashboard.mjs";
+import { formatPercent, parseCsv, summarizeNav } from "./dashboard.mjs";
 
 test("formats decimal returns as percentages", () => {
   assert.equal(formatPercent(0.1234), "12.3%");
@@ -17,4 +17,8 @@ test("summarizes a navigation series without hiding missing values", () => {
   assert.equal(result.end, "2024-01-03");
   assert.ok(Math.abs(result.return - -0.01) < 1e-12);
   assert.ok(Math.abs(result.drawdown - -0.1) < 1e-12);
+});
+
+test("parses quoted CSV rows into reusable records", () => {
+  assert.deepEqual(parseCsv('name,return\n"自由现金流,指数",0.12\n'), [{ name: "自由现金流,指数", return: "0.12" }]);
 });

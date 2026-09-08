@@ -1,0 +1,15 @@
+{
+  "source_label": "公开资料参考口径",
+  "index": "万得微盘股日频等权指数（8841431.WI）",
+  "frequency": "年度汇总，回撤同时保留月频和日频参考值",
+  "sources": [
+    "https://www.windindices.com/indices/zh/IndexF9/1a073179a3f0bebf923a0259cee963e4",
+    "https://www.cnpsec.com/plat_files/upload/png_upload/20250904/202509041756964443807.pdf",
+    "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/9/rptid/841547460013/index.phtml"
+  ],
+  "limitations": [
+    "Tushare 不直接提供 8841431.WI 的官方历史序列。",
+    "年度收益和长期指标需要用同一套序列重新核验。",
+    "实际投资收益还会受到换手、滑点、冲击成本、涨跌停、停牌和资金容量影响。"
+  ]
+}

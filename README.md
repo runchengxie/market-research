@@ -2,6 +2,11 @@
 
 Cross-market equity research, liquidity, capacity, and index replication framework.
 
+This repository is the unified successor to `index-research` and
+`market-liquidity-profiles`. Their historical code and research notes remain in
+the original repositories, while the maintained public dashboard and derived
+snapshots live here.
+
 The project is intentionally local-first. It reads existing market-data assets
 without copying raw files into the repository. The first supported markets are
 A-share, Hong Kong, US, and Japan equities.
