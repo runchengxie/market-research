@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import * as echarts from "echarts";
+import { echarts, type EChartsOption } from "./echarts";
 
 type ChartRow = Record<string, string>;
 type Series = { name: string; values: number[]; color: string };
 
-function Chart({ option }: { option: echarts.EChartsOption }) {
+function Chart({ option }: { option: EChartsOption }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
