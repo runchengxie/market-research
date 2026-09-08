@@ -43,3 +43,18 @@ uv run market-research report microcap --config configs/local.toml
 - 港股 RQData：`/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk`
 - 美股 SimFin：`/mnt/data/cold4t/simfin/us/extracted/us-shareprices-daily.csv`
 - nira 提供的 JPX、J-Quants 数据：`/mnt/data/cold4t/nira/current/guan-japanese-nira/data`
+## Barra / 风格因子报告
+
+在 `configs/local.toml` 中配置 A 股数据根目录和可选的历史风格因子结果目录后运行：
+
+```bash
+uv run market-research report barra --config configs/local.toml
+```
+
+输出包括：
+
+- `barra_summary.json`：历史因子摘要、数据来源和市值单调性指标；
+- `barra_size_quantiles.csv`：按形成日和市值升序分位的未来收益；
+- `barra_source_manifest.json`：canonical 项目、历史结果和原始数据的 provenance。
+
+市值分位中 Q1 是最小市值组，`monotonicity_score` 是相邻分位收益满足“小市值收益不低于大市值收益”的比例。该指标不等同于显著性检验，仍需结合成本、容量、停牌和幸存者偏差审阅。
