@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from .barra import analyze_size_monotonicity, load_barra_summary
 from .markets import build_a_share_panel, build_hk_panel, build_jp_panel, build_us_panel
 from .indexes import (
     build_nav,
@@ -46,6 +47,8 @@ def _build_parser() -> argparse.ArgumentParser:
     cashflow.add_argument("--config", required=True)
     etf_pairs = report_subparsers.add_parser("etf-pairs")
     etf_pairs.add_argument("--config", required=True)
+    barra = report_subparsers.add_parser("barra")
+    barra.add_argument("--config", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
     fetch = subparsers.add_parser("fetch")
@@ -122,6 +125,63 @@ def main(argv: list[str] | None = None) -> int:
                         "Research reconstruction, not Wind 8841431.WI official index.",
                         "No transaction costs, limit handling, or strategy capacity simulation.",
                     ],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return 0
+    if args.command == "report" and args.report_command == "barra":
+        config = _load_config(Path(args.config))
+        sources = config.get("sources", {})
+        barra_config = config.get("barra", {})
+        if not isinstance(sources, dict) or not sources.get("a_share_root"):
+            raise RuntimeError("A-share source is required for Barra report")
+        a_share_root = Path(str(sources["a_share_root"]))
+        if not a_share_root.exists():
+            raise RuntimeError("configured A-share source does not exist")
+        if not isinstance(barra_config, dict):
+            barra_config = {}
+        output_root = Path(config.get("output_root", "outputs"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        panel, panel_metadata = build_a_share_panel(
+            a_share_root,
+            config.get("as_of") or None,
+            use_duckdb=bool(config.get("use_duckdb", False)),
+        )
+        quantile_rows, size_summary = analyze_size_monotonicity(
+            panel,
+            int(barra_config.get("size_quantiles", 10)),
+            int(barra_config.get("holding_period", 1)),
+        )
+        result_root = barra_config.get("result_root")
+        history_summary = load_barra_summary(Path(str(result_root))) if result_root else None
+        (output_root / "barra_summary.json").write_text(
+            json.dumps(
+                {
+                    "analysis": "size factor cross-sectional forward-return monotonicity",
+                    "source": panel_metadata.as_dict(),
+                    "size_monotonicity": size_summary,
+                    "legacy_barra_result": history_summary,
+                },
+                ensure_ascii=False,
+                indent=2,
+                default=str,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        quantile_rows.to_csv(output_root / "barra_size_quantiles.csv", index=False)
+        (output_root / "barra_source_manifest.json").write_text(
+            json.dumps(
+                {
+                    "canonical_project": "market-research",
+                    "historical_source": str(result_root) if result_root else None,
+                    "panel_source": str(a_share_root),
+                    "raw_data_copied": False,
+                    "factor_count_in_historical_source": history_summary.get("factor_count") if history_summary else None,
                 },
                 ensure_ascii=False,
                 indent=2,

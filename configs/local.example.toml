@@ -3,7 +3,7 @@ as_of = ""
 use_duckdb = true
 
 [sources]
-a_share_root = "/home/richard/data/market-data-platform/assets/tushare/a_share"
+a_share_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share"
 hk_daily_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/daily"
 hk_valuation_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/valuation"
 hk_instruments_path = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/instruments"
@@ -20,3 +20,9 @@ etf_adj_factor_path = ""
 etf_basic_path = ""
 index_start_date = "20160902"
 index_end_date = "20260821"
+
+[barra]
+# Historical quant style-factor result bundle; raw data is not copied into this repo.
+result_root = "/home/richard/data/quant/market-data-platform/strategy_outputs/style-factors/weekly-20260904"
+size_quantiles = 10
+holding_period = 1

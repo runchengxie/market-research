@@ -29,3 +29,8 @@ Network fetching remains intentionally outside the deterministic core. Fetchers 
 2. 日股适配器目前没有配套的市值来源。nira 日频数据包含价格、成交量和成交额，但没有总市值，因此日股市值相关报告会标记为 `incomplete`。
 3. 微盘重建会展示入选数量和有价格数据的数量，也可以连接滞后流动性诊断。收益规则仍是最小市值 400 只股票等权、下一交易日执行的研究规则。
 4. 首阶段报告以静态 JSON 和 CSV 发布，页面使用 `market-research` 的统一前端。
+## Barra / 风格因子研究迁移
+
+quant 的 `strategy_outputs/style-factors` 历史报告已经纳入 `market-research` 的读取契约，当前公开/持续维护入口为 `market-research`。历史 19 个因子摘要和图表仍由 quant 目录保存；本项目不复制原始行情或实验缓存。
+
+迁移后的正式入口是 `market-research report barra`。它在复用历史摘要的同时，基于 canonical A 股面板重新计算市值分位收益，补足历史报告未持久化的十分位/二十分位尾部单调性诊断。

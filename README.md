@@ -41,6 +41,16 @@ uv run market-research validate --config configs/local.toml
 
 `microcap` 还会生成旧项目公开快照所需的年度收益、滚动 CAGR、滚动回撤和来源标记文件；`indices` 覆盖指数价格回报和 ETF 复权代理，`etf-pairs` 覆盖指数/ETF 配对、全部比较和流动性代表，`cashflow` 覆盖现金流指数研究。迁移输出的命名兼容旧项目，但生成入口统一为本项目。
 
+## Barra / 风格因子研究
+
+`market-research` 是 Barra/风格因子研究的 canonical 入口。quant 中的历史结果可以通过 `[barra].result_root` 作为 provenance 输入，原始行情和实验缓存仍留在 quant 数据资产目录。
+
+```bash
+uv run market-research report barra --config configs/local.toml
+```
+
+该命令输出历史 19 因子摘要，以及基于 canonical A 股面板重新计算的市值分位收益和尾部单调性诊断。历史报告原本只有五分位多空结果；十分位/二十分位的纯市值单调性应以新输出为准。
+
 ## GitHub Pages
 
 公开页面只使用派生文件，不发布原始行情、机器路径和凭证。运行本地页面：
