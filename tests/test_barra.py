@@ -86,6 +86,15 @@ def test_analyze_size_monotonicity_scores_small_to_large_order():
     assert summary["tail_spread"] == pytest.approx(0.06)
 
 
+def test_analyze_size_monotonicity_keeps_quantile_buckets_balanced():
+    from market_research.barra import analyze_size_monotonicity
+
+    panel = _panel().loc[_panel()["date"].isin(["2024-01-01", "2024-01-02"])].copy()
+    result, _ = analyze_size_monotonicity(panel, quantiles=2)
+
+    assert result.groupby(["formation_date", "bucket"], observed=True)["count"].sum().tolist() == [2, 2]
+
+
 def test_analyze_size_monotonicity_excludes_st_and_suspended_rows():
     from market_research.barra import analyze_size_monotonicity
 

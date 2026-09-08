@@ -49,9 +49,9 @@ uv run market-research validate --config configs/local.toml
 uv run market-research report barra --config configs/local.toml
 ```
 
-该命令输出历史 19 因子摘要，以及基于 canonical A 股面板重新计算的市值分位收益和尾部单调性诊断。历史报告原本只有五分位多空结果；十分位/二十分位的纯市值单调性应以新输出为准。
+该命令输出历史 19 因子摘要，以及基于 canonical A 股面板重新计算的市值分位收益和尾部排序诊断。页面将其标记为历史描述性证据；日频横截面观测存在时间相关性，不自动等同于独立样本、统计显著性或策略有效性。
 
-研究页面按现金流策略、小微盘策略、市场长期风格和跨市场探索四个研究域组织。小微盘域包含 A 股小微盘和跨市场小微盘流动性两个子主题；指数、ETF、Barra 和 18 年因子市场证据归入市场长期风格研究。完整边界见 `docs/research-information-architecture.md`。
+研究页面以历史研究档案为主线，并区分历史研究、研究中的专题和待补数据。现金流、小微盘、指数/ETF 与 Barra/18 年因子属于历史档案；跨市场小微盘流动性属于研究中的专题；Global Six-Market 和日股同口径分桶属于待补数据与未来研究。完整边界见 `docs/research-information-architecture.md`。
 
 市场证据层的 18 年风格研究和六市场 ETF proxy allocation study 位于
 `studies/`；alpha、signal、IC/decay 和策略决策仍属于 `quant-research`，
