@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import os
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -29,16 +31,59 @@ DEFAULT_CASHFLOW_INDEXES = (
 
 
 def api_for_index_code(ts_code: str) -> str | None:
-    suffix = str(ts_code).upper().split(".")[-1] if "." in str(ts_code) else ""
-    if suffix == "SI":
-        return "sw_daily"
-    if suffix == "CI":
-        return "ci_daily" if str(ts_code).upper().startswith("CI") else "index_daily"
-    if suffix == "TI":
-        return "ths_daily"
-    if suffix in {"SH", "SZ", "BJ"}:
-        return "index_daily"
-    return None
+    upper = str(ts_code).upper()
+    suffix = upper.rsplit(".", 1)[-1] if "." in upper else ""
+    return {
+        "SH": "index_daily", "SZ": "index_daily", "BJ": "index_daily", "CSI": "index_daily",
+        "CNI": "index_daily", "SI": "sw_daily", "CI": "ci_daily", "TI": "ths_daily",
+    }.get(suffix)
+
+
+def _tushare_client():
+    token = os.getenv("TUSHARE_TOKEN_2") or os.getenv("TUSHARE_TOKEN")
+    if not token:
+        raise RuntimeError("TUSHARE_TOKEN_2 or TUSHARE_TOKEN is not configured")
+    import tushare as ts
+
+    client = ts.pro_api(token=token)
+    api_url = os.getenv("TUSHARE_API_URL_2") or os.getenv("TUSHARE_API_URL")
+    if api_url:
+        client._DataApi__http_url = api_url
+    return client
+
+
+def fetch_linked_indices(
+    mapping_csv: Path, out_dir: Path, start_date: str = "20150101", end_date: str = "20260821",
+    sleep_seconds: float = 0.15, client=None,
+) -> None:
+    mapping = pd.read_csv(mapping_csv, dtype={"ts_code": str}).drop_duplicates("ts_code").copy()
+    mapping["api"] = mapping["ts_code"].map(api_for_index_code)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    mapping.to_csv(out_dir / "linked_index_catalog.csv", index=False)
+    client = client or _tushare_client()
+    frames: list[pd.DataFrame] = []
+    status: list[dict[str, object]] = []
+    for row in mapping.itertuples(index=False):
+        code, api = str(row.ts_code), row.api
+        if not api or pd.isna(api):
+            status.append({"ts_code": code, "api": None, "status": "unsupported_code_suffix", "rows": 0})
+            continue
+        try:
+            frame = getattr(client, api)(ts_code=code, start_date=start_date, end_date=end_date)
+            if frame.empty:
+                status.append({"ts_code": code, "api": api, "status": "empty", "rows": 0})
+            else:
+                frame = frame.copy()
+                frame["api"] = api
+                frames.append(frame)
+                status.append({"ts_code": code, "api": api, "status": "ok", "rows": len(frame)})
+        except Exception as exc:
+            status.append({"ts_code": code, "api": api, "status": "error", "rows": 0, "error": str(exc)[:300]})
+        if sleep_seconds:
+            time.sleep(sleep_seconds)
+    pd.DataFrame(status).to_csv(out_dir / "linked_index_fetch_status.csv", index=False)
+    if frames:
+        pd.concat(frames, ignore_index=True).to_parquet(out_dir / "linked_index_daily.parquet", index=False)
 
 
 def build_index_price_snapshot(index_daily: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:

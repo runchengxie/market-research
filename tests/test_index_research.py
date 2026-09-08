@@ -62,3 +62,28 @@ def test_index_code_routes_to_provider_and_pair_metrics_are_deterministic():
     result = build_etf_index_metrics(etf, index, "510001.SH", "000300.SH", "20260102", "20260106")
     assert result["etf_total_return"] == pytest.approx(0.1)
     assert result["index_price_return"] == pytest.approx(0.05)
+
+
+def test_index_code_routes_all_legacy_tushare_suffixes():
+    from market_research.index_research import api_for_index_code
+
+    assert api_for_index_code("000300.CNI") == "index_daily"
+    assert api_for_index_code("932365.CSI") == "index_daily"
+    assert api_for_index_code("801001.SI") == "sw_daily"
+    assert api_for_index_code("865001.TI") == "ths_daily"
+
+
+def test_fetch_linked_indices_writes_checkpoint_with_injected_client(tmp_path):
+    from market_research.index_research import fetch_linked_indices
+
+    class Client:
+        def __getattr__(self, _name):
+            return lambda **kwargs: pd.DataFrame({"ts_code": [kwargs["ts_code"]], "trade_date": ["20260105"], "close": [100.0]})
+
+    mapping = tmp_path / "mapping.csv"
+    pd.DataFrame({"ts_code": ["000300.SH", "801001.SI", "UNKNOWN.XX"]}).to_csv(mapping, index=False)
+    fetch_linked_indices(mapping, tmp_path / "out", client=Client(), sleep_seconds=0)
+
+    status = pd.read_csv(tmp_path / "out" / "linked_index_fetch_status.csv")
+    assert list(status["status"]) == ["ok", "ok", "unsupported_code_suffix"]
+    assert (tmp_path / "out" / "linked_index_daily.parquet").exists()
