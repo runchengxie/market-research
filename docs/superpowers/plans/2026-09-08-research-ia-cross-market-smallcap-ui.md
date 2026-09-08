@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将 `market-research` 整理为“现金流策略探索 / 小微盘策略探索 / 跨市场探索”三类入口，完成 A 股与跨市场小微盘流动性对齐，利用 HK cold data 和 Japanese NIRA 生成真实历史比较，并完成总览页、导航、时间筛选和中文化 UI。
+**Goal:** 将 `market-research` 整理为“现金流策略探索 / 小微盘策略探索 / 市场长期风格研究 / 跨市场探索”四类入口，完成 A 股与跨市场小微盘流动性对齐，利用 HK cold data 和 Japanese NIRA 生成真实历史比较，并完成总览页、导航、时间筛选和中文化 UI。
 
-**Architecture:** Python 报告层负责从 A 股、港股 cold data、美股和 Japanese NIRA 生成统一的跨市场小微盘流动性快照；Web 只消费脱敏派生数据。小微盘域包含“A股小微盘”和“跨市场小微盘”两个 sub tab；跨市场域承载更宽的市场流动性、Global Six-Market、FX 和分散化研究。
+**Architecture:** Python 报告层负责从 A 股、港股 cold data、美股和 Japanese NIRA 生成统一的跨市场小微盘流动性快照；Web 只消费脱敏派生数据。小微盘域包含“A股小微盘”和“跨市场小微盘”两个 sub tab；市场长期风格域承载指数/ETF 长期表现、Barra 和 18 年因子市场证据；跨市场域承载更宽的市场流动性、Global Six-Market、FX 和分散化研究。
 
 **Tech Stack:** Python 3.11+, pandas, DuckDB optional, pytest, React/TypeScript, Vite, Node test runner, CSS.
 
@@ -29,6 +29,10 @@
 ├── 小微盘策略探索
 │   ├── A股小微盘
 │   └── 跨市场小微盘流动性
+├── 市场长期风格研究
+│   ├── 指数与 ETF
+│   ├── Barra / 18 年因子证据
+│   └── 长期风格与市场阶段
 └── 跨市场探索
     ├── 跨市场流动性
     ├── Global Six-Market
@@ -36,6 +40,8 @@
 ```
 
 跨市场小微盘流动性研究的观察单位是“市场 × 市值分位 × 时间区间”，不是 Global Six-Market 的固定权重 ETF 组合。
+
+ETF 作为指数/市场代理和长期表现比较属于“市场长期风格研究”；ETF 的交易容量和流动性属于“跨市场探索”；ETF 选品、信号和策略组合属于 `quant-research`。
 
 ## Data and Output Contract
 
@@ -60,7 +66,7 @@
 - Modify: `tests/test_reports.py`, `tests/test_cli.py` — compatibility and command tests.
 - Modify: `web/scripts/build-public-snapshot.mjs` — derived snapshot filtering.
 - Modify/Create: `web/public/data/liquidity/summary.json`, `web/public/data/liquidity/periods.json`.
-- Modify: `web/src/main.tsx` — three domains, microcap subtabs, period selector, Chinese copy.
+- Modify: `web/src/main.tsx` — four domains, microcap subtabs, period selector, Chinese copy.
 - Modify: `web/src/styles.css` — navigation, overview cards, status badges, responsive layout.
 - Modify: `web/src/data.test.mjs`, `web/src/dashboard.test.mjs`, `web/src/editorialUi.test.mjs`.
 - Create: `docs/cross-market-smallcap-alignment.md`.
@@ -121,19 +127,20 @@ build_liquidity_periods(
 - [ ] Generate snapshots from the real HK cold data and Japanese NIRA run after Task 2.
 - [ ] Commit `feat: publish period-aware liquidity snapshots`.
 
-## Task 5: Implement three-domain navigation and microcap subtabs
+## Task 5: Implement four-domain navigation and microcap subtabs
 
 **State model:**
 
 ```typescript
-type Domain = "overview" | "cashflow" | "microcap" | "cross-market";
+type Domain = "overview" | "cashflow" | "microcap" | "style" | "cross-market";
 type MicrocapScope = "a-share" | "cross-market";
 type LiquidityPeriod = "latest" | "2020-2024" | "2025" | "2026 YTD";
 ```
 
-- [ ] Top navigation becomes `研究总览 | 现金流策略探索 | 小微盘策略探索 | 跨市场探索`.
+- [ ] Top navigation becomes `研究总览 | 现金流策略探索 | 小微盘策略探索 | 市场长期风格研究 | 跨市场探索`.
 - [ ] `小微盘策略探索` contains `A股小微盘 | 跨市场小微盘流动性` subtabs.
 - [ ] The cross-market subtab consumes period-aware liquidity snapshots and never duplicates raw-data logic.
+- [ ] Add a style-research page grouping existing index/ETF and Barra/18-year market-evidence outputs; alpha/strategy decisions remain in `quant-research`.
 - [ ] `跨市场探索` remains the broad home for liquidity, Global Six-Market, FX and diversification studies.
 - [ ] Preserve old hash links `#microcap`, `#indices`, `#cashflow`, `#liquidity` where possible, with compatibility tests.
 - [ ] Add tests for every top-level route and both microcap subtabs.
@@ -141,9 +148,9 @@ type LiquidityPeriod = "latest" | "2020-2024" | "2025" | "2026 YTD";
 
 ## Task 6: Redesign overview and navigation UI
 
-- [ ] Replace the flat overview with four editorial cards: 现金流策略、小微盘策略、跨市场探索、研究方法与数据边界.
+- [ ] Replace the flat overview with five editorial cards: 现金流策略、小微盘策略、市场长期风格、跨市场探索、研究方法与数据边界.
 - [ ] Make the small-cap card visibly point to the two subtabs.
-- [ ] Add a compact status strip: `3 个研究域`, `原始数据外置`, `证据优先`, `持续探索`.
+- [ ] Add a compact status strip: `4 个研究域`, `原始数据外置`, `证据优先`, `持续探索`.
 - [ ] Fix navigation CSS to target actual `.site-nav a`, including active, hover, keyboard focus and mobile overflow.
 - [ ] Use restrained theme accents: cashflow green, microcap terracotta, cross-market blue/ochre, methodology neutral.
 - [ ] Keep `a-share-zoo-garden`-inspired typography, whitespace, fine borders and editorial hierarchy without copying project-specific assets.
