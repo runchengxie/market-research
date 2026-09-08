@@ -36,3 +36,25 @@ def test_instrument_diagnostics_ranks_low_liquidity_sub_100m_market_caps():
 
     assert list(result["symbol"]) == ["A", "B"]
     assert result.loc[0, "avg_turnover_usd"] == pytest.approx(2_000_000 / 7.2)
+
+
+def test_cross_sectional_ranking_reports_target_amount_and_volume_percentiles():
+    from market_research.liquidity_profiles import build_cross_sectional_ranking
+
+    panel = pd.DataFrame(
+        {
+            "market": ["a_share"] * 3,
+            "symbol": ["TARGET", "SMALLER", "LARGER"],
+            "date": [date(2026, 1, 2)] * 3,
+            "turnover": [100.0, 50.0, 200.0],
+            "volume": [10.0, 5.0, 20.0],
+            "is_st": [False, False, False],
+            "is_suspended": [False, False, False],
+        }
+    )
+
+    result = build_cross_sectional_ranking(panel, "TARGET")
+
+    assert result.loc[0, "amount_rank"] == 2
+    assert result.loc[0, "day_count"] == 3
+    assert result.loc[0, "amount_percentile"] == pytest.approx(66.6666667)

@@ -64,3 +64,22 @@ def build_instrument_diagnostics(panel: pd.DataFrame, fx_rate: float = 1.0) -> p
     frame = _prepared(panel, fx_rate)
     result = frame.loc[frame["market_cap_usd"].lt(1e8), ["market", "symbol", "market_cap_usd", "avg_turnover_usd", "bucket"]].copy()
     return result.sort_values(["avg_turnover_usd", "symbol"], kind="stable").reset_index(drop=True)
+
+
+def build_cross_sectional_ranking(panel: pd.DataFrame, target_symbol: str) -> pd.DataFrame:
+    """Rank a target instrument against its same-market daily universe."""
+    frame = panel.copy()
+    frame["date"] = pd.to_datetime(frame["date"])
+    frame["turnover"] = pd.to_numeric(frame["turnover"], errors="coerce")
+    frame["volume"] = pd.to_numeric(frame.get("volume"), errors="coerce")
+    frame = frame.loc[
+        frame["turnover"].gt(0)
+        & ~frame.get("is_st", False).astype(bool)
+        & ~frame.get("is_suspended", False).astype(bool)
+    ].copy()
+    frame["amount_rank"] = frame.groupby(["market", "date"])["turnover"].rank(method="first")
+    frame["volume_rank"] = frame.groupby(["market", "date"])["volume"].rank(method="first")
+    frame["day_count"] = frame.groupby(["market", "date"])["symbol"].transform("count")
+    frame["amount_percentile"] = frame["amount_rank"] / frame["day_count"] * 100
+    frame["volume_percentile"] = frame["volume_rank"] / frame["day_count"] * 100
+    return frame.loc[frame["symbol"].eq(target_symbol)].sort_values(["market", "date"], kind="stable").reset_index(drop=True)
