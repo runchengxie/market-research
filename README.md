@@ -19,7 +19,7 @@ uv run market-research config inspect --output-root outputs
 
 当前已接入的数据目录包括：
 
-- A 股：`/home/richard/data/market-data-platform/assets/tushare/a_share`
+- A 股：`/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20150101_20260907_daily_clean/data`
 - 港股：`/mnt/data/cold4t/hk-liquidity`
 - 美股：`/mnt/data/cold4t/simfin`
 - 日股：`/mnt/data/cold4t/nira/current/guan-japanese-nira/data`

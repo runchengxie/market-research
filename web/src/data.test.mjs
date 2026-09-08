@@ -15,6 +15,14 @@ test("publishes the migrated cross-market liquidity snapshot", () => {
   assert.ok(summary.periods.every((period) => ["verified", "incomplete"].includes(period.status)));
 });
 
+test("publishes the Barra market-evidence snapshot", () => {
+  const summary = JSON.parse(fs.readFileSync(path.join(root, "barra/barra_summary.json"), "utf8"));
+  const quantiles = fs.readFileSync(path.join(root, "barra/barra_size_quantiles.csv"), "utf8");
+  assert.equal(summary.legacy_barra_result.factor_count, 19);
+  assert.equal(summary.size_monotonicity.quantiles, 10);
+  assert.match(quantiles, /formation_date,bucket,mean_forward_return/);
+});
+
 test("does not publish the retired animal index dataset", () => {
   assert.equal(fs.existsSync(path.join(root, "animal")), false);
   assert.equal(fs.existsSync(path.join(root, "plant")), false);
