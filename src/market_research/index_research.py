@@ -170,6 +170,33 @@ def build_etf_index_metrics(
     }
 
 
+def build_etf_proxy_returns(
+    etf_daily: pd.DataFrame, adj_factor: pd.DataFrame, etf_basic: pd.DataFrame, start_date: str, end_date: str
+) -> pd.DataFrame:
+    daily = etf_daily.copy()
+    factors = adj_factor.copy()
+    daily["trade_date"] = daily["trade_date"].astype(str).str.replace("-", "", regex=False)
+    factors["trade_date"] = factors["trade_date"].astype(str).str.replace("-", "", regex=False)
+    frame = daily.merge(factors[["ts_code", "trade_date", "adj_factor"]], on=["ts_code", "trade_date"], how="inner")
+    frame["adjusted_close"] = pd.to_numeric(frame["close"], errors="coerce") * pd.to_numeric(frame["adj_factor"], errors="coerce")
+    frame = frame.loc[frame["trade_date"].isin([str(start_date), str(end_date)])]
+    eligible = etf_basic.loc[
+        etf_basic["status"].eq("L") & etf_basic["fund_type"].eq("股票型")
+        & etf_basic["name"].fillna("").str.contains("ETF", regex=False)
+        & etf_basic["list_date"].notna()
+    ][["ts_code", "name", "benchmark", "list_date"]]
+    frame = frame.merge(eligible, on="ts_code", how="inner")
+    rows = []
+    for code, group in frame.groupby("ts_code", sort=True):
+        endpoints = group.set_index("trade_date")["adjusted_close"]
+        if str(start_date) not in endpoints or str(end_date) not in endpoints:
+            continue
+        p0, p1 = float(endpoints[str(start_date)]), float(endpoints[str(end_date)])
+        row = group.iloc[0]
+        rows.append({"ts_code": code, "name": row["name"], "benchmark": row["benchmark"], "list_date": row["list_date"], "p0": p0, "p1": p1, "total_return": p1 / p0 - 1, "cagr": (p1 / p0) ** 0.1 - 1})
+    return pd.DataFrame(rows, columns=["ts_code", "name", "benchmark", "list_date", "p0", "p1", "total_return", "cagr"]).sort_values("cagr", ascending=False).reset_index(drop=True)
+
+
 def build_cashflow_snapshot(raw: pd.DataFrame, indexes=DEFAULT_CASHFLOW_INDEXES) -> dict[str, pd.DataFrame]:
     frame = raw.copy()
     frame["date"] = pd.to_datetime(frame["trade_date"].astype(str), format="%Y%m%d", errors="coerce")
@@ -187,10 +214,32 @@ def build_cashflow_snapshot(raw: pd.DataFrame, indexes=DEFAULT_CASHFLOW_INDEXES)
         status.append({"ts_code": code, "name": name, "source_code": source_code, "return_basis": basis, "status": "available" if not selected.empty else "missing", "coverage_start": selected["date"].min().date().isoformat() if not selected.empty else None, "coverage_end": selected["date"].max().date().isoformat() if not selected.empty else None, "rows": int(len(selected))})
         if selected.empty:
             continue
-        series = selected.set_index("date")["close"]
-        start_date, start_close = series.index[0], float(series.iloc[0])
-        end_date, end_close = series.index[-1], float(series.iloc[-1])
-        ret = end_close / start_close - 1
-        years = max((end_date - start_date).days / 365.25, 1 / 365.25)
-        performance.append({"ts_code": code, "name": name, "universe": universe, "rebalance_frequency": frequency, "return_basis": basis, "source_code": source_code, "note": note, "window": "full_available", "status": "ok", "as_of": available_end.date().isoformat(), "start_date": start_date.date().isoformat(), "end_date": end_date.date().isoformat(), "start_close": start_close, "end_close": end_close, "return": ret, "cagr": (1 + ret) ** (1 / years) - 1})
+        series = selected.set_index("date")["close"].sort_index()
+        windows = ("last_week", "last_month", "last_6_months", "ytd", "rolling_1_year", "year_2025", "since_20240924", "last_3_years", "last_5_years", "last_10_years", "last_15_years")
+        for window in windows:
+            requested_start, requested_end = _window_bounds(window, available_end)
+            before, after = series[series.index <= requested_start], series[series.index <= requested_end]
+            if before.empty or after.empty:
+                performance.append({"ts_code": code, "name": name, "universe": universe, "rebalance_frequency": frequency, "return_basis": basis, "source_code": source_code, "note": note, "window": window, "status": "insufficient_history", "as_of": available_end.date().isoformat(), "start_date": None, "end_date": None, "start_close": None, "end_close": None, "return": None, "cagr": None})
+                continue
+            actual_start, start_close = before.index[-1], float(before.iloc[-1])
+            actual_end, end_close = after.index[-1], float(after.iloc[-1])
+            years = max((actual_end - actual_start).days / 365.25, 1 / 365.25)
+            ret = end_close / start_close - 1
+            performance.append({"ts_code": code, "name": name, "universe": universe, "rebalance_frequency": frequency, "return_basis": basis, "source_code": source_code, "note": note, "window": window, "status": "ok", "as_of": available_end.date().isoformat(), "start_date": actual_start.date().isoformat(), "end_date": actual_end.date().isoformat(), "start_close": start_close, "end_close": end_close, "return": ret, "cagr": (1 + ret) ** (1 / years) - 1})
     return {"performance": pd.DataFrame(performance), "status": pd.DataFrame(status), "rebalance_frequency": pd.DataFrame(indexes, columns=["ts_code", "name", "universe", "rebalance_frequency", "note"])}
+
+
+def _window_bounds(label: str, end: pd.Timestamp) -> tuple[pd.Timestamp, pd.Timestamp]:
+    if label == "last_week": return end - pd.Timedelta(days=7), end
+    if label == "last_month": return end - pd.DateOffset(months=1), end
+    if label == "last_6_months": return end - pd.DateOffset(months=6), end
+    if label == "ytd": return pd.Timestamp(end.year, 1, 1), end
+    if label == "rolling_1_year": return end - pd.DateOffset(years=1), end
+    if label == "year_2025": return pd.Timestamp("2025-01-01"), pd.Timestamp("2025-12-31")
+    if label == "since_20240924": return pd.Timestamp("2024-09-24"), end
+    if label == "last_3_years": return end - pd.DateOffset(years=3), end
+    if label == "last_5_years": return end - pd.DateOffset(years=5), end
+    if label == "last_10_years": return end - pd.DateOffset(years=10), end
+    if label == "last_15_years": return end - pd.DateOffset(years=15), end
+    raise ValueError(label)

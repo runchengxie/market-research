@@ -19,6 +19,7 @@ from .reports import build_liquidity_report, write_report_bundle
 from .microcap import write_microcap_snapshot
 from .index_research import (
     build_cashflow_snapshot,
+    build_etf_proxy_returns,
     build_index_price_snapshot,
     fetch_linked_indices,
     refresh_cashflow_indices,
@@ -138,6 +139,11 @@ def main(argv: list[str] | None = None) -> int:
         output = Path(config.get("output_root", "outputs"))
         output.mkdir(parents=True, exist_ok=True)
         result.to_csv(output / "a_share_index_price_returns.csv", index=False)
+        etf_daily = _index_research_path(config, "etf_daily_path")
+        factors = _index_research_path(config, "etf_adj_factor_path")
+        basic = _index_research_path(config, "etf_basic_path")
+        if etf_daily and factors and basic:
+            build_etf_proxy_returns(_read_table(etf_daily), _read_table(factors), _read_table(basic), start, end).to_csv(output / "etf_proxy_returns.csv", index=False)
         return 0
     if args.command == "report" and args.report_command == "cashflow":
         config = _load_config(Path(args.config))

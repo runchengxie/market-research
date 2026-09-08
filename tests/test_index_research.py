@@ -50,6 +50,10 @@ def test_cashflow_snapshot_prefers_total_return_and_marks_missing_history():
     assert set(result) == {"performance", "status", "rebalance_frequency"}
     assert result["performance"].loc[0, "return_basis"] == "gross_total_return"
     assert result["status"].loc[0, "status"] == "available"
+    assert set(result["performance"]["window"]) == {
+        "last_week", "last_month", "last_6_months", "ytd", "rolling_1_year", "year_2025",
+        "since_20240924", "last_3_years", "last_5_years", "last_10_years", "last_15_years",
+    }
 
 
 def test_index_code_routes_to_provider_and_pair_metrics_are_deterministic():
@@ -99,3 +103,15 @@ def test_refresh_cashflow_indices_writes_parquet_without_network(tmp_path):
     refresh_cashflow_indices(tmp_path / "out", client=Client(), indexes=(("932365.CSI", "cash"),))
     result = pd.read_parquet(tmp_path / "out" / "cashflow_index_daily.parquet")
     assert result.loc[0, "ts_code"] == "932365.CSI"
+
+
+def test_etf_proxy_returns_uses_adjusted_endpoint_prices():
+    from market_research.index_research import build_etf_proxy_returns
+
+    daily = pd.DataFrame({"ts_code": ["510001.SH"] * 2, "trade_date": ["20260102", "20260106"], "close": [10, 11]})
+    factors = pd.DataFrame({"ts_code": ["510001.SH"] * 2, "trade_date": ["20260102", "20260106"], "adj_factor": [1, 1.1]})
+    basic = pd.DataFrame({"ts_code": ["510001.SH"], "name": ["示例ETF"], "benchmark": ["沪深300指数"], "status": ["L"], "fund_type": ["股票型"], "list_date": [20200101]})
+
+    result = build_etf_proxy_returns(daily, factors, basic, "20260102", "20260106")
+
+    assert result.loc[0, "total_return"] == pytest.approx(0.21)
