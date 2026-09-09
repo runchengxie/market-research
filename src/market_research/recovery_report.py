@@ -1,5 +1,6 @@
 """Derived recovery notebook outputs; never publish input paths or raw prices."""
 from html import escape
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -7,7 +8,7 @@ import pandas as pd
 from .recovery import EPISODE_COLUMNS, analyze_recovery
 
 
-def write_recovery_report(nav: pd.DataFrame, output: Path, names: dict[str, str], issues=()) -> None:
+def write_recovery_report(nav: pd.DataFrame, output: Path, names: dict[str, str], issues=(), coverage=()) -> None:
     summaries, episodes, entries, horizons = [], [], [], []
     for code, series in nav.groupby("ts_code"):
         result = analyze_recovery(series)
@@ -26,6 +27,26 @@ def write_recovery_report(nav: pd.DataFrame, output: Path, names: dict[str, str]
         "loss_fraction", "worst_return", "median_return"])
     for name, frame in [("summary", summary), ("episodes", episode_frame), ("entries", entry_frame), ("horizons", horizon_frame)]:
         frame.to_csv(output / f"recovery_{name}.csv", index=False)
+
+    # One calculation feeds the notebook and the native web UI. JSON null keeps
+    # immature horizons / unfinished recoveries distinct from observed zero.
+    metadata = {row["ts_code"]: row for row in coverage}
+    public_series = []
+    for row in json.loads(summary.to_json(orient="records")):
+        code = row["ts_code"]
+        row.update({key: metadata.get(code, {}).get(key, "unknown") for key in ("group", "role")})
+        for key, frame in [("episodes", episode_frame), ("horizons", horizon_frame), ("entries", entry_frame)]:
+            selected = frame.loc[frame.ts_code.eq(code)].drop(columns="ts_code")
+            if key == "entries":
+                selected = selected.sort_values("calendar_days", ascending=False).head(20)
+            row[key] = json.loads(selected.to_json(orient="records"))
+        public_series.append(row)
+    public = {"schema_version": 1, "research_only": True, "replication_verified": False,
+              "source": "Shared Tushare index closes; SSE calendar validated; derived recovery statistics",
+              "series": public_series, "issues": list(issues),
+              "excluded": [{key: row.get(key) for key in ("ts_code", "name", "group", "status")}
+                           for row in coverage if row["ts_code"] not in set(summary.ts_code)]}
+    (output / "recovery.json").write_text(json.dumps(public, ensure_ascii=False, allow_nan=False, indent=2) + "\n", encoding="utf-8")
 
     def table(frame):
         return frame.to_html(index=False, escape=True, na_rep="N/A")

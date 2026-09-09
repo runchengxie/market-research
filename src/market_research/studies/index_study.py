@@ -128,7 +128,7 @@ def _run_study(config: dict) -> Path:
     nav_output = pd.concat(paths) if paths else pd.DataFrame(columns=["date", "ts_code", "nav"])
     nav_output.to_csv(output / "normalized_nav.csv", index=False)
     from ..recovery_report import write_recovery_report
-    write_recovery_report(nav_output, output, {code: name for code, name, _, _ in CATALOG}, issues=issues)
+    write_recovery_report(nav_output, output, {code: name for code, name, _, _ in CATALOG}, issues=issues, coverage=coverage)
     (output / "receipt.json").write_text(json.dumps({
         "status": "partial" if issues else "completed_descriptive_study",
         "study": "cashflow_microcap_index_evidence_v1", "research_only": True,

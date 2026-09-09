@@ -1,6 +1,7 @@
 import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+const RecoverySection = lazy(() => import("./components/RecoverySection"));
 
 const NavChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.NavChart })));
 const AnnualChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.AnnualChart })));
@@ -140,7 +141,7 @@ function MicrocapSubTabs({ scope, onChange }: { scope: MicrocapScope; onChange: 
 function StyleSubTabs({ scope, onChange }: { scope: StyleScope; onChange: (value: StyleScope) => void }) { return <div className="sub-tabs" aria-label="市场长期风格研究子主题"><button className={scope === "indices" ? "active" : ""} onClick={() => onChange("indices")}>指数与 ETF</button><button className={scope === "barra" ? "active" : ""} onClick={() => onChange("barra")}>Barra · 18年因子研究</button></div>; }
 
 function MicrocapPage({ scope, onScopeChange }: { scope: MicrocapScope; onScopeChange: (value: MicrocapScope) => void }) {
-  return <><MicrocapSubTabs scope={scope} onChange={onScopeChange}/>{scope === "cross-market" ? <LiquidityPage embedded/> : <MicrocapPageContent/>}</>;
+  return <><MicrocapSubTabs scope={scope} onChange={onScopeChange}/>{scope === "cross-market" ? <LiquidityPage embedded/> : <><RecoverySection scope="microcap"/><MicrocapPageContent/></>}</>;
 }
 
 function MicrocapPageContent() {
@@ -223,6 +224,10 @@ function BarraPage() {
 }
 
 function CashflowPage() {
+  return <><CashflowPageContent/><RecoverySection scope="cashflow"/></>;
+}
+
+function CashflowPageContent() {
   const { data: rows } = useCsv("index/cashflow_indices/cashflow_performance.csv");
   const { data: frequency } = useCsv("index/cashflow_indices/cashflow_rebalance_frequency.csv");
   const [windowKey, setWindowKey] = useState("rolling_1_year");
@@ -308,6 +313,6 @@ function App() {
   return <div className="app"><header className="site-header"><div className="site-masthead"><div><span className="brand-kicker">历史研究档案 · 证据优先</span><h1>市场研究档案</h1><p className="site-deck">以历史研究为主线，区分已完成证据、进行中专题和待补数据。</p></div><div className="site-meta"><span>历史档案 · 研究中 · 待补数据</span><strong>原始数据外置 · 描述性证据</strong></div></div><nav className="site-nav" aria-label="研究主题">{navItems.map(([key, label]) => <a key={key} className={tab === key || (key === "style" && tab === "indices") || (key === "cross-market" && tab === "liquidity") ? "active" : ""} href={`#${key}`} onClick={() => setTab(key)}>{label}</a>)}</nav></header><main className="site-main">{page}</main><footer className="site-footer"><span>市场研究档案 · 历史证据优先</span><a href="https://github.com/runchengxie/quant-market-research">查看 GitHub 仓库 ↗</a></footer></div>;
 }
 
-function Overview() { return <><ThemeHeading kicker="历史研究档案 · 目录" title="先回顾已经形成的证据，再查看正在推进的专题。" text="本项目以历史市场研究为主线，公开可复核的派生快照。研究中的专题和待补数据会单独标注。" asof="公开快照"/><section className="overview-grid"><a href="#cashflow"><span className="section-kicker">01 · 历史研究</span><h3>现金流历史研究</h3><p>回顾现金流、股息和调仓频率在不同回报口径与持有窗口下的表现。</p><b>进入档案 ↗</b></a><a href="#microcap"><span className="section-kicker">02 · 历史研究</span><h3>小微盘历史研究</h3><p>A股小微盘规则重建与跨市场小微盘流动性，分别通过两个子主题阅读。</p><b>进入档案 ↗</b></a><a href="#style"><span className="section-kicker">03 · 历史研究</span><h3>长期风格历史研究</h3><p>指数、ETF、Barra 和 18 年因子研究，放在同一条历史证据线上。</p><b>进入档案 ↗</b></a></section><div className="callout"><span className="section-kicker">研究复核笔记</span><h3><a href="./research/recovery.html">现金流与小微盘研究复核摘要 ↗</a></h3><p>查看独立研究笔记中的复核结论、证据范围与待验证事项。</p></div><section className="research-grid"><ResearchCard title="历史研究优先" text="页面优先呈现已经完成的市场研究文档和可复核快照，研究中的假设会单独标注。"/><ResearchCard title="描述性证据" text="ETF 作为市场代理，指数表现和 18 年因子现象用于描述市场长期特征。它们不能直接说明 alpha 或策略是否应该上线。"/><ResearchCard title="研究状态优先" text="每个专题保留来源、样本区间和限制条件。日频观察数量需要结合时间相关性理解。"/></section><div className="fine-print"><span className="section-kicker">数据与研究边界</span><p>策略研究、历史市场证据和通用平台能力分开维护。原始行情不公开，跨市场比较不会把缺失市场填成零。六市场配置研究等尚未形成完整快照的内容归入待补数据与未来研究。</p></div></>; }
+function Overview() { return <><ThemeHeading kicker="历史研究档案 · 目录" title="先回顾已经形成的证据，再查看正在推进的专题。" text="本项目以历史市场研究为主线，公开可复核的派生快照。研究中的专题和待补数据会单独标注。" asof="公开快照"/><section className="overview-grid"><a href="#cashflow"><span className="section-kicker">01 · 历史研究</span><h3>现金流历史研究</h3><p>回顾现金流、股息和调仓频率在不同回报口径与持有窗口下的表现。</p><b>进入档案 ↗</b></a><a href="#microcap"><span className="section-kicker">02 · 历史研究</span><h3>小微盘历史研究</h3><p>A股小微盘规则重建与跨市场小微盘流动性，分别通过两个子主题阅读。</p><b>进入档案 ↗</b></a><a href="#style"><span className="section-kicker">03 · 历史研究</span><h3>长期风格历史研究</h3><p>指数、ETF、Barra 和 18 年因子研究，放在同一条历史证据线上。</p><b>进入档案 ↗</b></a></section><RecoverySection scope="overview"/><section className="research-grid"><ResearchCard title="历史研究优先" text="页面优先呈现已经完成的市场研究文档和可复核快照，研究中的假设会单独标注。"/><ResearchCard title="描述性证据" text="ETF 作为市场代理，指数表现和 18 年因子现象用于描述市场长期特征。它们不能直接说明 alpha 或策略是否应该上线。"/><ResearchCard title="研究状态优先" text="每个专题保留来源、样本区间和限制条件。日频观察数量需要结合时间相关性理解。"/></section><div className="fine-print"><span className="section-kicker">数据与研究边界</span><p>策略研究、历史市场证据和通用平台能力分开维护。原始行情不公开，跨市场比较不会把缺失市场填成零。六市场配置研究等尚未形成完整快照的内容归入待补数据与未来研究。</p></div></>; }
 
 createRoot(document.getElementById("root")!).render(<StrictMode><Suspense fallback={<Loading />}><App /></Suspense></StrictMode>);
