@@ -18,6 +18,8 @@ uv run market-research report index-study --study studies/index_replication/stud
 同时输出回本水下期、买入日等待、固定持有年限亏损比例、recovery.json 和本地 recovery.html。长窗口配置见
 `studies/index_replication/recovery.study.json`，详细口径见 `recovery-methodology.md`。
 主站首页仅显示研究摘要，回本数据和方法在现金流、小微盘专题内阅读。
+两个专题另设指数复刻进展，展示经过复核的派生汇总，价格回报与税前全收益分别比较。
+数据来源、固定实验区间和待补证据见 [复刻研究记录](studies/index_replication/replication-progress-20260909.md)。
 旧网页 `research/recovery.html` 会跳转到 `#cashflow-recovery`，不要用本地报告覆盖跳转页。
 现金流按价格指数统一比较800、国证、A500、1000、全指和500；
 微盘纳入同花顺、万得及中证/国证2000对照，缺数据明确标记，不以代理填补。

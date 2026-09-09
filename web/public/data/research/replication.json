@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-09",
+  "sources": [
+    {
+      "id": "tracking-20260909",
+      "label": "800与国证旧版估值实验（净收益已撤回）",
+      "detail": "旧实验 available_data_tracking_20260909 的费用分摊使用了持有期末信息，净收益与净回撤已撤回。修正后发现部分调仓日缺少卖出报价，完整组合未通过成交检查，旧全篮子业绩表已撤下。财务使用20260906单一修订版本，行业与公司行为仍有近似。",
+      "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
+    },
+    {
+      "id": "microcap-audit-20260909",
+      "label": "微盘行情与估值审计",
+      "detail": "2015-01-05至2026-09-08旧目标的独立检查中，400股组合有3708个缺价记录，周频3股研究代理有88个。该代理尚未确认与历史策略规格一致。88条记录均匹配到同日停牌事件，但未证明完整停牌时段、估值价格或成交。历史名称记录还识别出400股目标中的102578条ST记录、14442条未知记录，三股代理分别为32条与24条。记录数不等于股票数。必须按历史状态重新选股，本轮未发布自制净值。",
+      "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
+    },
+    {
+      "id": "family-methodologies",
+      "label": "指数编制方案与数据覆盖",
+      "detail": "A500采用2025年7月方案，1000采用2024年12月方案。已实现50只与100只选股、现金流金额加权及10%上限，并对A500超额换样设置阻断。严格实验检查了两指数共44个形成期，均因历史母池或质量指标原料不完整而未生成持仓，没有发布复刻收益。",
+      "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
+    }
+  ],
+  "indices": [
+    {
+      "code": "932368",
+      "name": "800现金流",
+      "scope": "cashflow",
+      "status": "成交验证受阻",
+      "finding": "已修正费用核算，并增加调仓买卖双方的原始报价检查。完整组合有1处卖出缺报价，比较暂未完成。",
+      "limitation": "旧净收益已撤回。修正后检查发现调仓卖出缺报价，财务修订链也不完整。",
+      "next": "补齐停牌期间的调仓处理，再重算完整组合。3股组合单独评估。",
+      "source_id": "tracking-20260909"
+    },
+    {
+      "code": "980092",
+      "name": "国证自由现金流",
+      "scope": "cashflow",
+      "status": "成交验证受阻",
+      "finding": "已修正费用核算。完整组合有3处调仓卖出缺报价，比较暂未完成。",
+      "limitation": "旧净收益已撤回，部分调仓卖出缺报价。资格、行业及2024年规则变更前的历史仍待核对。",
+      "next": "先解决调仓成交与历史资格，再比较完整指数和小组合。",
+      "source_id": "tracking-20260909"
+    },
+    {
+      "code": "931082",
+      "name": "A500现金流",
+      "scope": "cashflow",
+      "status": "历史输入不足",
+      "finding": "选股、权重和调样限制已实现，严格输入检查未通过，暂不发布复刻收益。",
+      "limitation": "早期缺少历史A500母池，已有母池的质量指标原料也不完整。",
+      "next": "补齐可用区间的母池与财务原料，再验证连续回放。",
+      "source_id": "family-methodologies"
+    },
+    {
+      "code": "932369",
+      "name": "1000现金流",
+      "scope": "cashflow",
+      "status": "财务原料不足",
+      "finding": "已实现100只选股与权重规则，22个形成期均未通过完整母池质量指标检查。",
+      "limitation": "部分母池成员缺少财务原料，直接丢弃这些股票会改变质量排名。",
+      "next": "逐项补齐财务缺口，再计算成分重合率和跟踪误差。",
+      "source_id": "family-methodologies"
+    },
+    {
+      "code": "883418.TI",
+      "name": "同花顺微盘",
+      "scope": "microcap",
+      "status": "历史成分待补",
+      "finding": "已有供应商行情。最新成分接口返回290条代码与名称，已留存查询快照。",
+      "limitation": "接口未提供生效日期和权重，也未证明成分完整，无法据此回填历史。",
+      "next": "持续积累快照，补编制规则与历史成分证据。",
+      "source_id": "microcap-audit-20260909"
+    },
+    {
+      "code": "8841431.WI",
+      "name": "万得微盘与自制400股",
+      "scope": "microcap",
+      "status": "历史资格与估值待补",
+      "finding": "已修正用未来报价筛选候选的问题，旧目标的缺价与历史ST记录已单独审计。",
+      "limitation": "万得完整官方日线仍缺失。自制目标需按历史资格重新生成，尚无可靠复制精度。",
+      "next": "重新形成历史候选池，明确停牌估值、延期成交和退市处理。",
+      "source_id": "microcap-audit-20260909"
+    }
+  ],
+  "comparisons": []
+}
