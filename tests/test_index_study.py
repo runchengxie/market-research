@@ -34,6 +34,16 @@ def test_index_study_uses_common_dates_and_marks_missing_sources(tmp_path):
     recovery = pd.read_csv(output / "recovery_summary.csv")
     assert recovery.loc[recovery.ts_code.eq("932368.CSI"), "currently_underwater"].item() == False
     assert (output / "recovery.html").is_file()
+    snapshot = json.loads((output / "recovery.json").read_text())
+    item = next(row for row in snapshot["series"] if row["ts_code"] == "932368.CSI")
+    assert item["group"] == "cashflow_price"
+    assert item["longest_completed_underwater_calendar_days"] is None
+    assert item["horizons"][0]["loss_fraction"] is None
+    assert item["horizons"][0]["mature_entries"] == 0
+    assert item["entries"][-1]["censored"] is True
+    assert "nav" not in item and "close" not in item
+    assert str(tmp_path) not in (output / "recovery.json").read_text()
+    assert any(row["ts_code"] == "883418.TI" for row in snapshot["excluded"])
 
 
 def test_index_study_rejects_conflicting_duplicate_prices(tmp_path):
@@ -64,6 +74,9 @@ def test_shared_calendar_gap_blocks_and_clears_previous_nav(tmp_path):
     assert pd.read_csv(out / "recovery_summary.csv").empty
     assert "blocked_calendar_or_price_gap" in (out / "report.html").read_text()
     assert "blocked_calendar_or_price_gap" in (out / "recovery.html").read_text()
+    snapshot = json.loads((out / "recovery.json").read_text())
+    assert snapshot["series"] == []
+    assert snapshot["issues"][0]["status"] == "blocked_calendar_or_price_gap"
 
 
 def test_missing_input_rerun_marks_previous_recovery_invalid(tmp_path):
@@ -83,3 +96,6 @@ def test_missing_input_rerun_marks_previous_recovery_invalid(tmp_path):
     assert pd.read_csv(out / "recovery_summary.csv").empty
     assert pd.read_csv(out / "normalized_nav.csv").empty
     assert "blocked_input_error" in (out / "recovery.html").read_text()
+    snapshot = json.loads((out / "recovery.json").read_text())
+    assert snapshot["series"] == []
+    assert snapshot["issues"][0]["status"] == "blocked_input_error"
