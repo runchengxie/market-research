@@ -22,7 +22,6 @@ test("研究总览使用三个研究域和小微盘子主题", () => {
   assert.match(source, /现金流历史研究/);
   assert.match(source, /小微盘历史研究/);
   assert.match(source, /长期风格历史研究/);
-  assert.match(source, /研究中的专题/);
   assert.match(source, /历史研究档案/);
   assert.match(source, /实际账户盈亏/);
   assert.match(source, /跨市场小微盘流动性/);
@@ -46,6 +45,6 @@ test("研究总览使用三个研究域和小微盘子主题", () => {
 });
 
 test("收益图表为缺失值保留 N/A 标记", () => {
-  assert.match(researchCharts, /N\/A/);
+  assert.match(researchCharts, /未提供/);
   assert.match(source, /当前窗口没有对应回报口径的数据/);
 });

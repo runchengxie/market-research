@@ -10,13 +10,10 @@ with sync_playwright() as playwright:
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(sys.argv[1], wait_until="domcontentloaded")
-    recovery = page.get_by_role("region", name="回本与持有期风险")
-    recovery.wait_for()
-    assert "800现金流" in recovery.inner_text()
-    recovery.get_by_role("button", name="微盘与小盘对照 · 供应商点位").click()
-    assert "同花顺微盘" in recovery.inner_text()
-    assert "800现金流" not in recovery.inner_text()
+    page.get_by_role("region", name="各专题研究进展").wait_for()
+    assert page.locator("main table, main canvas").count() == 0
     page.get_by_role("link", name="现金流历史研究", exact=True).click()
+    recovery = page.get_by_role("region", name="回本与持有期风险")
     recovery.wait_for()
     assert "1,073 天" in recovery.inner_text()
     recovery.get_by_label("查看指数").select_option("932369.CSI")
@@ -29,7 +26,7 @@ with sync_playwright() as playwright:
     recovery.wait_for()
     assert recovery.get_by_label("查看指数").input_value() == "883418.TI"
     assert "308 天" in recovery.inner_text()
-    assert "N/A" in recovery.inner_text()
+    assert "样本不足" in recovery.inner_text()
     for width in [1440, 390]:
         page.set_viewport_size({"width": width, "height": 1100})
         page.wait_for_timeout(300)

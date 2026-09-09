@@ -24,15 +24,17 @@ uv run market-research report index-study --study studies/index_replication/reco
 
 `recovery_summary.csv`、`recovery_episodes.csv`、`recovery_entries.csv`、`recovery_horizons.csv` 和 `recovery.html`。
 主 `receipt.json` 记录输入哈希与日历证据；输入阻断时回本文件也重写为空并在页面显示原因，不保留旧成功净值。
-网页入口为 `web/public/research/recovery.html`，由本地核验后的HTML派生报告生成，不包含原始价格和机器路径。
+原来的 `web/public/research/recovery.html` 仅保留跳转功能，指向主站的 `#cashflow-recovery` 区块。旧链接可以继续使用。
 
 主站现在原生整合：`#cashflow`、`#microcap` 内有回本指标、指数选择、水下区间图、持有期统计和买入日等待明细；
-`#overview` 按价格、税前全收益、微盘供应商点位分组比较。独立HTML只作为附件，不使用iframe。
+`#overview` 只显示三个专题的简短发现、数据日期、进度和入口。详细表格和筛选只在专题中展示。
+主站内可展开计算方法。研究环境继续生成本地HTML，用于核对，不再发布为另一份常驻网页。
 模块展示完整样本，与旧收益图的短期窗口筛选独立；微盘旧版未通过估值审计的档案不参与新模块。
 
 同一次研究运行额外输出 `recovery.json`：包含各指数的口径、样本区间、汇总、区间、持有期和最多20条最久买入日等待。
 不含原始行情或本地路径；未成熟比例、未完成恢复日期保留JSON null。输入失败时同步清空JSON，保留阻断状态。
-核验后将该文件复制至 `web/public/data/research/recovery.json`，与独立附件一同提交公开快照；浏览器不重新计算收益。
+核验后将该文件复制至 `web/public/data/research/recovery.json`，提交公开统计数据。不要用生成的本地HTML覆盖旧地址的跳转页。
+浏览器读取同一份统计数据，不重新计算收益。首页只展示摘要，图表代码在进入专题后加载。
 
 图表约定：按所选指数比较最长10段水下时长，并额外保留未完成区间；横向条形使用现有主站ECharts、零起点自然日轴、
 蓝色单一色系，日期标签和表格明确区分已完成/尚未回本。表格保留交易日、谷底、区间回撤以便精确核对。
