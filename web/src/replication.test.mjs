@@ -22,6 +22,16 @@ test('published snapshot has valid provenance and measurements and all six resea
   assert.equal(isReplicationSnapshot(published), true);
   assert.equal(published.indices.length, 6);
   assert.equal(published.indices.filter(i => i.scope === 'microcap').length, 2);
+  assert.equal(published.comparisons.length, 0, '本轮完整组合验证受阻，不发布旧业绩表');
+  assert.doesNotMatch(render('cashflow', published), /<table/);
+  for (const comparison of published.comparisons) {
+    if (comparison.source_id === 'tracking-20260909') {
+      for (const row of comparison.rows) {
+        assert.equal(row.replica_net_cagr, null, '旧费用路径的净收益已撤回');
+        assert.equal(row.replica_net_max_drawdown, null, '旧费用路径的回撤已撤回');
+      }
+    }
+  }
 });
 
 test('replication comparison labels its own dates and basis and keeps topic scopes separate', () => {

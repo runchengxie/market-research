@@ -64,7 +64,8 @@ export function ReplicationContent({scope, snapshot}: {scope: Scope; snapshot: S
     <div className="theme-heading"><div><span className="section-kicker">指数复刻</span><h2>我们自己算出的结果，跟指数有多接近？</h2><p>这里单独记录本地选股和持仓回放的结果。完整指数与少量股票组合需要分别验证。</p></div><span className="asof">研究更新 {snapshot.as_of}</span></div>
     <div className="evidence-grid">{indices.map(i => <article className="evidence-card" key={i.code}><span className="tag warm">{i.status}</span><h3>{i.name}</h3><p>{i.finding}</p><dl><dt>仍需解决</dt><dd>{i.limitation}</dd><dt>下一步</dt><dd>{i.next}</dd></dl><a href={snapshot.sources.find(s => s.id === i.source_id)?.url}>查看来源与方法 ↗</a></article>)}</div>
     {comparisons.map(g => <section className="panel" key={`${g.basis}-${g.start}-${g.end}`}>
-      <h3>{g.basis === 'price' ? '价格回报' : '税前全收益'}复刻对照</h3>
+      <h3>{g.basis === 'price' ? '价格回报' : '税前全收益'}估值对照</h3>
+      {g.source_id === 'tracking-20260909' && <p className="panel-note">旧实验仅保留未扣成本的估值结果。净收益与净回撤已撤回，部分调仓缺少卖出报价，这组数字不能作为可成交业绩。</p>}
       <p className="panel-note">{g.start} 至 {g.end}。本表使用固定实验区间，不随其他图表筛选变化。年化按252个交易日计算，扣成本结果采用25基点成交成本模型，尚未完整模拟实际成交限制。</p>
       <div className="table-scroll"><table><thead><tr>{['指数', '官方年化', '复刻年化（未扣成本）', '复刻年化（扣成本）', '复刻最大回撤（扣成本）', '日收益相关性', '年化跟踪误差'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{g.rows.map(r => <tr key={r.code}><td>{indices.find(i => i.code === r.code)?.name}</td><td>{pct(r.official_cagr)}</td><td>{pct(r.replica_gross_cagr)}</td><td>{pct(r.replica_net_cagr)}</td><td>{pct(r.replica_net_max_drawdown)}</td><td>{r.daily_correlation === null ? '未提供' : r.daily_correlation.toFixed(4)}</td><td>{pct(r.tracking_error)}</td></tr>)}</tbody></table></div>
       <p className="panel-note">相关性与跟踪误差均比较未扣成本复刻与官方收益。相关性越接近1，日常涨跌越相似。跟踪误差衡量收益差的波动，数值越小越稳定。两项指标都要结合长期收益差判断。来源：{snapshot.sources.find(s => s.id === g.source_id)?.label}。</p>

@@ -15,9 +15,11 @@ with sync_playwright() as p:
     research = page.get_by_role("region", name="指数复刻进展")
     research.wait_for()
     assert research.locator("article").count() == 4
-    assert "12.27%" in research.inner_text()
-    assert "0.9804" in research.inner_text()
-    assert "2021-03-15" in research.inner_text()
+    assert research.locator("table").count() == 0
+    research.get_by_text("数据来源与研究边界", exact=True).click()
+    assert "净收益与净回撤已撤回" in research.inner_text()
+    assert "9.69%" not in research.inner_text()
+    assert "旧全篮子业绩表已撤下" in research.inner_text()
     for width in (1440, 390):
         page.set_viewport_size({"width": width, "height": 1100})
         page.wait_for_function("document.documentElement.scrollWidth <= innerWidth + 1")
@@ -28,7 +30,8 @@ with sync_playwright() as p:
     assert research.locator("table").count() == 0
     assert "万得微盘" in research.inner_text()
     research.get_by_text("数据来源与研究边界", exact=True).click()
-    assert "189" in research.inner_text()
+    assert "3708" in research.inner_text()
+    assert "102578" in research.inner_text()
     assert not errors, errors
     for body, status in [("unavailable", 503), ('{"schema_version":1}', 200)]:
         failure = browser.new_page()

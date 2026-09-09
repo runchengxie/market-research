@@ -4,20 +4,20 @@
   "sources": [
     {
       "id": "tracking-20260909",
-      "label": "800与国证逐日复刻实验",
-      "detail": "实验 available_data_tracking_20260909，行情截至2026-09-04。公告时点过滤，季度调仓，14个日历日截点，持有股数自然漂移。财务使用20260906单一修订版本，历史申万行业作为代理。配股、重整、精确临时调样尚未完整复制。价格回报和税前现金股息再投资分别计算。",
+      "label": "800与国证旧版估值实验（净收益已撤回）",
+      "detail": "旧实验 available_data_tracking_20260909 的费用分摊使用了持有期末信息，净收益与净回撤已撤回。修正后发现部分调仓日缺少卖出报价，完整组合未通过成交检查，旧全篮子业绩表已撤下。财务使用20260906单一修订版本，行业与公司行为仍有近似。",
       "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
     },
     {
       "id": "microcap-audit-20260909",
       "label": "微盘行情与估值审计",
-      "detail": "index-study-20260909 的共享日线审计。2023-07-04至2026-09-04共771个形成日，117天存在所选持仓下一日缺报价，累计189个估值缺口。缺口未解决前不生成完整自制净值。万得年度资料仅作参考，缺少完整官方日线和历史成分。",
+      "detail": "2015-01-05至2026-09-08旧目标的独立检查中，400股组合有3708个缺价记录，周频3股研究代理有88个。该代理尚未确认与历史策略规格一致。88条记录均匹配到同日停牌事件，但未证明完整停牌时段、估值价格或成交。历史名称记录还识别出400股目标中的102578条ST记录、14442条未知记录，三股代理分别为32条与24条。记录数不等于股票数。必须按历史状态重新选股，本轮未发布自制净值。",
       "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
     },
     {
       "id": "family-methodologies",
       "label": "指数编制方案与数据覆盖",
-      "detail": "A500官方方案为931082_Index_Methodology_cn.pdf（2025年7月版本），包含季度调样及每次调整比例一般不超过30%的要求。1000与A500的官方行情已覆盖，完整母池、财务时点及本地持仓回放需要分别验证。",
+      "detail": "A500采用2025年7月方案，1000采用2024年12月方案。已实现50只与100只选股、现金流金额加权及10%上限，并对A500超额换样设置阻断。严格实验检查了两指数共44个形成期，均因历史母池或质量指标原料不完整而未生成持仓，没有发布复刻收益。",
       "url": "https://github.com/runchengxie/quant-market-research/blob/main/studies/index_replication/replication-progress-20260909.md"
     }
   ],
@@ -26,40 +26,40 @@
       "code": "932368",
       "name": "800现金流",
       "scope": "cashflow",
-      "status": "研究近似",
-      "finding": "已完成逐日复刻。2025年以来平均成分重合率85.50%，完整历史价格日收益相关性0.9804。",
-      "limitation": "财务修订链和精确公司行为仍不完整，相关性不能代替收益差。",
-      "next": "检查3股组合相对完整指数的收益、回撤和集中度。",
+      "status": "成交验证受阻",
+      "finding": "已修正费用核算，并增加调仓买卖双方的原始报价检查。完整组合有1处卖出缺报价，比较暂未完成。",
+      "limitation": "旧净收益已撤回。修正后检查发现调仓卖出缺报价，财务修订链也不完整。",
+      "next": "补齐停牌期间的调仓处理，再重算完整组合。3股组合单独评估。",
       "source_id": "tracking-20260909"
     },
     {
       "code": "980092",
       "name": "国证自由现金流",
       "scope": "cashflow",
-      "status": "研究近似",
-      "finding": "已完成逐日复刻。2025年以来平均成分重合率54.15%，选股差异仍较大。",
-      "limitation": "ROE稳定性与行业使用代理口径，部分历史资格条件缺失。2024年规则变更前的历史需单独理解。",
-      "next": "核对财务定义、资格筛选及小组合风险。",
+      "status": "成交验证受阻",
+      "finding": "已修正费用核算。完整组合有3处调仓卖出缺报价，比较暂未完成。",
+      "limitation": "旧净收益已撤回，部分调仓卖出缺报价。资格、行业及2024年规则变更前的历史仍待核对。",
+      "next": "先解决调仓成交与历史资格，再比较完整指数和小组合。",
       "source_id": "tracking-20260909"
     },
     {
       "code": "931082",
       "name": "A500现金流",
       "scope": "cashflow",
-      "status": "待完成复刻",
-      "finding": "已有官方行情对照，正在补齐本地成分回放。",
-      "limitation": "不能用今天的A500成分替代历史股票池，30%调样限制需要独立处理。",
-      "next": "先检查母池历史，再逐期核对成分和权重。",
+      "status": "历史输入不足",
+      "finding": "选股、权重和调样限制已实现，严格输入检查未通过，暂不发布复刻收益。",
+      "limitation": "早期缺少历史A500母池，已有母池的质量指标原料也不完整。",
+      "next": "补齐可用区间的母池与财务原料，再验证连续回放。",
       "source_id": "family-methodologies"
     },
     {
       "code": "932369",
       "name": "1000现金流",
       "scope": "cashflow",
-      "status": "待完成复刻",
-      "finding": "已有官方行情对照，正在补齐本地成分回放。",
-      "limitation": "官方指数业绩不能代替本地复制结果。",
-      "next": "检验现金流筛选相对中证1000的收益与风险变化。",
+      "status": "财务原料不足",
+      "finding": "已实现100只选股与权重规则，22个形成期均未通过完整母池质量指标检查。",
+      "limitation": "部分母池成员缺少财务原料，直接丢弃这些股票会改变质量排名。",
+      "next": "逐项补齐财务缺口，再计算成分重合率和跟踪误差。",
       "source_id": "family-methodologies"
     },
     {
@@ -67,112 +67,21 @@
       "name": "同花顺微盘",
       "scope": "microcap",
       "status": "历史成分待补",
-      "finding": "已有供应商指数行情，可用于市场表现和回本研究。",
-      "limitation": "历史成分、权重和分红口径仍待核验，尚无通过验证的本地复制精度。",
-      "next": "检查最新成分接口覆盖，积累带日期的快照。",
+      "finding": "已有供应商行情。最新成分接口返回290条代码与名称，已留存查询快照。",
+      "limitation": "接口未提供生效日期和权重，也未证明成分完整，无法据此回填历史。",
+      "next": "持续积累快照，补编制规则与历史成分证据。",
       "source_id": "microcap-audit-20260909"
     },
     {
       "code": "8841431.WI",
       "name": "万得微盘与自制400股",
       "scope": "microcap",
-      "status": "估值与基准待补",
-      "finding": "万得保留年度参考资料，自制400股已识别缺报价问题。",
-      "limitation": "缺少完整万得官方日线。自制旧净值存在估值缺口，不能据此证明复制成功。",
-      "next": "补停牌与退市估值证据，单独验证日频400股和周频3股。",
+      "status": "历史资格与估值待补",
+      "finding": "已修正用未来报价筛选候选的问题，旧目标的缺价与历史ST记录已单独审计。",
+      "limitation": "万得完整官方日线仍缺失。自制目标需按历史资格重新生成，尚无可靠复制精度。",
+      "next": "重新形成历史候选池，明确停牌估值、延期成交和退市处理。",
       "source_id": "microcap-audit-20260909"
     }
   ],
-  "comparisons": [
-    {
-      "scope": "cashflow",
-      "basis": "price",
-      "start": "2021-03-15",
-      "end": "2026-09-04",
-      "source_id": "tracking-20260909",
-      "rows": [
-        {
-          "code": "932368",
-          "official_cagr": 0.12265341599748303,
-          "replica_gross_cagr": 0.10401062066759326,
-          "replica_net_cagr": 0.09687691013667088,
-          "replica_net_max_drawdown": -0.2269992875842527,
-          "daily_correlation": 0.9803758978562698,
-          "tracking_error": 0.03985699434982548
-        },
-        {
-          "code": "980092",
-          "official_cagr": 0.1626860223805695,
-          "replica_gross_cagr": 0.11815070112665582,
-          "replica_net_cagr": 0.10981875992080892,
-          "replica_net_max_drawdown": -0.2562328553636908,
-          "daily_correlation": 0.9397094696497487,
-          "tracking_error": 0.07154784364180651
-        }
-      ]
-    },
-    {
-      "scope": "cashflow",
-      "basis": "price",
-      "start": "2025-01-02",
-      "end": "2026-09-04",
-      "source_id": "tracking-20260909",
-      "rows": [
-        {
-          "code": "932368",
-          "official_cagr": 0.037627714202755014,
-          "replica_gross_cagr": 0.01326326023076918,
-          "replica_net_cagr": 0.007059295038120084,
-          "replica_net_max_drawdown": -0.22699928758425247,
-          "daily_correlation": 0.963189324850511,
-          "tracking_error": 0.04407610907705009
-        },
-        {
-          "code": "980092",
-          "official_cagr": 0.05441657456591109,
-          "replica_gross_cagr": 0.025845462332680924,
-          "replica_net_cagr": 0.019586543478448126,
-          "replica_net_max_drawdown": -0.2562328553636911,
-          "daily_correlation": 0.9315145659576056,
-          "tracking_error": 0.06243571975781657
-        }
-      ]
-    },
-    {
-      "scope": "cashflow",
-      "basis": "total",
-      "start": "2021-03-15",
-      "end": "2026-09-04",
-      "source_id": "tracking-20260909",
-      "rows": [
-        {
-          "code": "932368",
-          "official_cagr": 0.18598106831536088,
-          "replica_gross_cagr": 0.16363785635769768,
-          "replica_net_cagr": 0.15624674154195217,
-          "replica_net_max_drawdown": -0.2158267128299729,
-          "daily_correlation": 0.9809928663858567,
-          "tracking_error": 0.039075048169270286
-        }
-      ]
-    },
-    {
-      "scope": "cashflow",
-      "basis": "total",
-      "start": "2025-01-02",
-      "end": "2026-09-04",
-      "source_id": "tracking-20260909",
-      "rows": [
-        {
-          "code": "932368",
-          "official_cagr": 0.08521472752992887,
-          "replica_gross_cagr": 0.05653148118818585,
-          "replica_net_cagr": 0.050161685805806266,
-          "replica_net_max_drawdown": -0.21582671282997368,
-          "daily_correlation": 0.9633136837928846,
-          "tracking_error": 0.043835476628435704
-        }
-      ]
-    }
-  ]
+  "comparisons": []
 }
