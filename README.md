@@ -15,6 +15,8 @@ uv run market-research report index-study --study studies/index_replication/stud
 
 示例只读共享行情，输出在仓库外；异机先修改示例中的路径。
 输出 coverage.csv、comparison.csv、normalized_nav.csv、receipt.json 和本地 report.html。
+同时输出回本水下期、买入日等待、固定持有年限亏损比例及 recovery.html；长窗口配置见
+`studies/index_replication/recovery.study.json`，详细口径见 `recovery-methodology.md`。
 现金流按价格指数统一比较800、国证、A500、1000、全指和500；
 微盘纳入同花顺、万得及中证/国证2000对照，缺数据明确标记，不以代理填补。
 这是行情证据层，不能把它当作已完成成分复刻。研究进度和阻断项见
