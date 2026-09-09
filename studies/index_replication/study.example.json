@@ -1,6 +1,7 @@
 {
   "start": "2023-07-04",
   "end": "2026-09-04",
+  "calendar": "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/trade_cal/a_share_trade_cal_latest.parquet",
   "output_root": "/home/richard/data/quant/market-data-platform/research/quant-market-research/index-study-20260909",
   "sources": [
     "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/index_daily/cashflow_indices_20260906/data/part.parquet",
