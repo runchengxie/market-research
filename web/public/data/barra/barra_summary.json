@@ -24,7 +24,7 @@
     "excluded_rows": 16078
   },
   "legacy_barra_result": {
-    "source_root": "/home/richard/data/quant/market-data-platform/strategy_outputs/style-factors/weekly-20260904",
+    "source_root": "style-factors/weekly-20260904",
     "schema_version": "research.style-factors.v1",
     "generated_at": "2026-09-05T02:57:22.351584+00:00",
     "factor_count": 19,

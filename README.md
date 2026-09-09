@@ -1,6 +1,27 @@
-# market-research
+# quant-market-research
 
-跨市场股票研究、流动性、容量和指数复现框架。
+Quant 家族的可执行、可视化研究笔记：跨市场股票、流动性、容量和指数复现。
+
+共享数据由 `quant-market-data-platform` 管理，通用回测与执行能力由
+`quant-platform` 提供，私有 alpha 与飞书选股留在 `quant-research`。
+本项目保留独立仓库；Python 包 `market_research` 和 CLI `market-research` 保持兼容。
+原始数据、缓存和完整运行结果不随代码迁移，不另建数据副本。
+
+## 现金流与微盘研究笔记
+
+```bash
+uv run market-research report index-study --study studies/index_replication/study.example.json
+```
+
+示例只读共享行情，输出在仓库外；异机先修改示例中的路径。
+输出 coverage.csv、comparison.csv、normalized_nav.csv、receipt.json 和本地 report.html。
+现金流按价格指数统一比较800、国证、A500、1000、全指和500；
+微盘纳入同花顺、万得及中证/国证2000对照，缺数据明确标记，不以代理填补。
+这是行情证据层，不能把它当作已完成成分复刻。研究进度和阻断项见
+`studies/index_replication/README.md`。
+
+新开发路径为 `/home/richard/code/quant/quant-market-research`。
+迁移后旧路径保留兼容链接及已有 worktree，避免打断其他在途任务；详见 `docs/quant-family-migration.md`。
 
 本项目统一承接并 supersede `index-research` 与 `market-liquidity-profiles` 的独立发布职责。旧仓库保留历史代码和研究记录；持续维护的代码、公开页面和派生快照集中在这里。本项目是 canonical research entry point，旧仓库仅作为 legacy archive。
 
@@ -71,4 +92,4 @@ npm run dev
 
 推送到 `main` 后，GitHub Actions 会运行页面测试和构建。启用 GitHub Pages 的 Actions 发布来源后，页面地址为：
 
-<https://runchengxie.github.io/market-research/>
+<https://runchengxie.github.io/quant-market-research/>

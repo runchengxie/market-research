@@ -1,0 +1,12 @@
+{
+  "start": "2023-07-04",
+  "end": "2026-09-04",
+  "calendar": "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/trade_cal/a_share_trade_cal_latest.parquet",
+  "output_root": "/home/richard/data/quant/market-data-platform/research/quant-market-research/index-study-20260909",
+  "sources": [
+    "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/index_daily/cashflow_indices_20260906/data/part.parquet",
+    "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/index_daily/a_share_all_index_daily_ths_microcap/data/part.parquet",
+    "/home/richard/data/quant/market-data-platform/research/quant-market-research/vendor_cache/indices_20260909/932000.CSI.parquet",
+    "/home/richard/data/quant/market-data-platform/research/quant-market-research/vendor_cache/indices_20260909/399303.SZ.parquet"
+  ]
+}
