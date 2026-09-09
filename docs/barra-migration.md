@@ -39,8 +39,8 @@
 [来源清单](../web/public/data/barra/barra_source_manifest.json)。本次只改展示文字，
 不重算或更换派生数据，不复制生成端代码、原始数据或私有研究内容。
 
-档案总览新增 `./research/recovery.html` 入口。该独立公开研究摘要由 recovery 任务生成，
-本任务不创建占位报告；合并发布前须由主 agent 确认真实 HTML 已纳入发布目录。
+回本研究现已并入现金流和小微盘专题。总览只保留简短发现、数据日期、研究进度和专题入口。
+旧 `./research/recovery.html` 地址跳转到主站 `#cashflow-recovery`，详细统计和计算方法在专题内阅读。
 
 验证时运行 `cd web && npm test && npm run build`，并按 Pages 工作流扫描
 `web/dist` 中的本地路径和凭证标记，确认 `git diff -- web/public/data` 为空。

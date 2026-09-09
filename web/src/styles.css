@@ -128,3 +128,15 @@ tr:hover td { background: #f0e9df; }
 .recovery-entries { margin: 28px 0; }
 .recovery-entries summary { cursor: pointer; font-size: 14px; }
 @media (max-width: 800px) { .recovery-section .recovery-stats { grid-template-columns: 1fr; } .recovery-stats .stat:last-child { grid-column: auto; } }
+.evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 28px 0; }
+.evidence-card { display: flex; flex-direction: column; padding: 24px; border: 1px solid #d8d0c3; background: #f8f5ef; }
+.evidence-card > .tag { align-self: start; }
+.evidence-card h3 { margin: 20px 0 12px; font-size: 24px; }
+.evidence-conclusion { font-size: 16px; line-height: 1.8; }
+.evidence-card dl { margin: 0 0 24px; font-size: 13px; line-height: 1.8; }
+.evidence-card dt { color: #514b43; font-weight: 600; margin-top: 12px; }
+.evidence-card dd { margin: 3px 0 0; color: #716c63; }
+.evidence-card > a { margin-top: auto; color: #b64d33; font-size: 14px; text-decoration: none; }
+.recovery-method { margin: 24px 0; font-size: 13px; line-height: 1.8; }
+.recovery-method summary { cursor: pointer; margin-bottom: 16px; }
+@media (max-width: 900px) { .evidence-grid { grid-template-columns: 1fr; } }

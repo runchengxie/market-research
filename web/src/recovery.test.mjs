@@ -11,7 +11,7 @@ const series = (ts_code, name, group) => ({
   episodes: [{ peak_date: '2020-01-02', trough_date: '2020-01-03', recovery_date: null,
     observed_until: '2020-01-06', calendar_days: 4, trading_sessions: 2, censored: true, max_drawdown: -.2 }],
   horizons: [{ years: 1, mature_entries: 0, immature_entries: 3, loss_fraction: null, worst_return: null, median_return: null }],
-  entries: [{entry_date: '2020-01-02', breakeven_date: null, observed_until: '2020-01-06', calendar_days: 4, censored: true}],
+  entries: [{entry_date: '2020-01-02', breakeven_date: null, observed_until: '2020-01-06', calendar_days: 4, trading_sessions: 2, worst_return_before_breakeven: -.2, censored: true}],
 });
 const snapshot = {schema_version: 1, series: [series('932368.CSI', '800现金流', 'cashflow_price'),
   series('gtr', '800现金流（税前全收益）', 'cashflow_gross_total_return'),
@@ -24,8 +24,12 @@ test('cashflow recovery defaults to price series and preserves censoring and imm
   assert.doesNotMatch(html, /同花顺微盘|800现金流（税前全收益）/);
   assert.match(html, /至少 4 天/);
   assert.match(html, /25\.00%/);
-  assert.match(html, /N\/A/);
+  assert.match(html, /样本不足/);
   assert.match(html, /期限已满/);
+  const entryTable = html.slice(html.indexOf('等待最久的买入日'));
+  assert.match(entryTable, /交易日/);
+  assert.match(entryTable, /回本前最差收益/);
+  assert.match(entryTable, /-20\.00%/);
   assert.doesNotMatch(html, /<iframe|NaN|undefined/);
 });
 
@@ -41,6 +45,12 @@ test('empty or blocked research shows explicit unavailable status, not zero reco
   assert.match(html, /暂无通过校验/);
   assert.match(html, /blocked_calendar_or_price_gap/);
   assert.doesNotMatch(html, /0 天|0\.00%/);
+});
+
+test('blocked group cannot continue displaying retained statistics', () => {
+  const html = render('cashflow', {...snapshot, issues: [{group: 'cashflow_price', status: 'blocked_calendar_or_price_gap'}]});
+  assert.match(html, /暂无通过校验/);
+  assert.doesNotMatch(html, /25\.00%|至少 4 天/);
 });
 
 test('malformed nested series are rejected before rendering, while null horizons remain valid', () => {
