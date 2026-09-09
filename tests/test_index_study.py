@@ -31,6 +31,9 @@ def test_index_study_uses_common_dates_and_marks_missing_sources(tmp_path):
     coverage = pd.read_csv(output / "coverage.csv")
     assert coverage.loc[coverage.ts_code.eq("883418.TI"), "status"].item() == "missing"
     assert str(tmp_path) not in (output / "report.html").read_text()
+    recovery = pd.read_csv(output / "recovery_summary.csv")
+    assert recovery.loc[recovery.ts_code.eq("932368.CSI"), "currently_underwater"].item() == False
+    assert (output / "recovery.html").is_file()
 
 
 def test_index_study_rejects_conflicting_duplicate_prices(tmp_path):
@@ -58,4 +61,25 @@ def test_shared_calendar_gap_blocks_and_clears_previous_nav(tmp_path):
     assert receipt["issues"][0]["status"] == "blocked_calendar_or_price_gap"
     assert pd.read_csv(out / "normalized_nav.csv").empty
     assert pd.read_csv(out / "comparison.csv").empty
+    assert pd.read_csv(out / "recovery_summary.csv").empty
     assert "blocked_calendar_or_price_gap" in (out / "report.html").read_text()
+    assert "blocked_calendar_or_price_gap" in (out / "recovery.html").read_text()
+
+
+def test_missing_input_rerun_marks_previous_recovery_invalid(tmp_path):
+    prices = tmp_path / "prices.parquet"
+    pd.DataFrame({"ts_code": ["932368.CSI"] * 2, "trade_date": ["20250102", "20250103"], "close": [100, 90]}).to_parquet(prices)
+    out = tmp_path / "out"
+    config = tmp_path / "study.json"
+    settings = {"sources": [str(prices)], "calendar": _calendar(tmp_path), "start": "2025-01-02", "end": "2025-01-03", "output_root": str(out)}
+    config.write_text(json.dumps(settings))
+    main(["report", "index-study", "--study", str(config)])
+    assert not pd.read_csv(out / "recovery_summary.csv").empty
+    settings["sources"] = [str(tmp_path / "absent.parquet")]
+    config.write_text(json.dumps(settings))
+    with pytest.raises(FileNotFoundError):
+        main(["report", "index-study", "--study", str(config)])
+    assert json.loads((out / "receipt.json").read_text())["status"] == "blocked_input_error"
+    assert pd.read_csv(out / "recovery_summary.csv").empty
+    assert pd.read_csv(out / "normalized_nav.csv").empty
+    assert "blocked_input_error" in (out / "recovery.html").read_text()
