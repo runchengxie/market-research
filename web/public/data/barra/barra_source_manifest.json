@@ -1,7 +1,7 @@
 {
   "canonical_project": "market-research",
-  "historical_source": "/home/richard/data/quant/market-data-platform/strategy_outputs/style-factors/weekly-20260904",
-  "panel_source": "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20150101_20260907_daily_clean/data",
+  "historical_source": "style-factors/weekly-20260904",
+  "panel_source": "a_share_all_20150101_20260907_daily_clean",
   "raw_data_copied": false,
   "factor_count_in_historical_source": 19
 }
