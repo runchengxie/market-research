@@ -1,4 +1,6 @@
 from datetime import date
+import sys
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -32,3 +34,35 @@ def test_share_events_are_forward_filled_to_requested_trading_dates():
 
 def test_symbols_pending_download_skips_completed_parts():
     assert symbols_pending_download(["13010", "72030"], {"13010"}) == ["72030"]
+
+
+def test_yfinance_sidecar_supports_resumable_parallel_downloads(tmp_path, monkeypatch):
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def get_shares_full(self, start=None, end=None):
+            return pd.Series(
+                [100.0],
+                index=pd.to_datetime(["2025-01-02"], utc=True),
+            )
+
+    monkeypatch.setitem(sys.modules, "yfinance", SimpleNamespace(Ticker=FakeTicker))
+    from market_research.markets.yahoo import build_yfinance_shares_sidecar
+
+    panel = pd.DataFrame(
+        {
+            "symbol": ["13010", "72030"],
+            "date": [date(2025, 1, 2), date(2025, 1, 2)],
+        }
+    )
+
+    result = build_yfinance_shares_sidecar(
+        panel,
+        tmp_path / "shares.parquet",
+        parts_dir=tmp_path / "parts",
+        workers=2,
+    )
+
+    assert sorted(result["symbol"].unique()) == ["13010", "72030"]
+    assert len(list((tmp_path / "parts").glob("*.parquet"))) == 2

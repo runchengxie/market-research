@@ -7,8 +7,10 @@ join to the local J-Quants daily bars.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
+from threading import Lock
 from typing import Iterable
 
 import pandas as pd
@@ -65,6 +67,7 @@ def build_yfinance_shares_sidecar(
     parts_dir: Path | None = None,
     delay_seconds: float = 0.0,
     error_path: Path | None = None,
+    workers: int = 1,
 ) -> pd.DataFrame:
     """Download Yahoo share-count events for symbols in a JP daily panel.
 
@@ -81,6 +84,8 @@ def build_yfinance_shares_sidecar(
     required = {"symbol", "date"}
     if not required.issubset(daily_panel.columns):
         raise ValueError("daily_panel requires symbol and date columns")
+    if workers < 1:
+        raise ValueError("workers must be at least 1")
 
     import time
 
@@ -91,7 +96,9 @@ def build_yfinance_shares_sidecar(
     rows: list[pd.DataFrame] = []
     groups = daily_panel.groupby("symbol", sort=True)
     pending = symbols_pending_download(groups.groups, completed)
-    for code in pending:
+    error_lock = Lock()
+
+    def download_one(code: str) -> pd.DataFrame:
         group = groups.get_group(code)
         try:
             ticker = yf.Ticker(jp_code_to_yahoo_symbol(code))
@@ -102,13 +109,22 @@ def build_yfinance_shares_sidecar(
                 result = build_daily_shares_sidecar(code, events, pd.to_datetime(group["date"]).dt.date)
             if parts:
                 result.to_parquet(parts / f"{code}.parquet", index=False)
-            rows.append(result)
+            return result
         except Exception as error:  # pragma: no cover - depends on Yahoo response
             if error_path:
-                with Path(error_path).open("a", encoding="utf-8") as handle:
-                    handle.write(f"{code}\t{type(error).__name__}\t{error}\n")
-        if delay_seconds > 0:
-            time.sleep(delay_seconds)
+                with error_lock:
+                    with Path(error_path).open("a", encoding="utf-8") as handle:
+                        handle.write(f"{code}\t{type(error).__name__}\t{error}\n")
+            return pd.DataFrame(columns=["date", "symbol", "shares_outstanding"])
+        finally:
+            if delay_seconds > 0:
+                time.sleep(delay_seconds)
+
+    if workers == 1:
+        rows.extend(download_one(code) for code in pending)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            rows.extend(executor.map(download_one, pending))
 
     if parts:
         rows = [pd.read_parquet(path) for path in sorted(parts.glob("*.parquet"))]

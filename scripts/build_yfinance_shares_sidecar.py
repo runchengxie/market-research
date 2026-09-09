@@ -23,6 +23,7 @@ def main() -> None:
     parser.add_argument("--end")
     parser.add_argument("--code", action="append", help="Limit the trial to one or more JPX codes")
     parser.add_argument("--delay", type=float, default=1.0, help="Seconds between Yahoo requests")
+    parser.add_argument("--workers", type=int, default=1, help="Concurrent Yahoo requests")
     parser.add_argument("--parts-dir", type=Path, help="Checkpoint directory for resume")
     parser.add_argument("--error-log", type=Path, help="Append failed symbols here")
     args = parser.parse_args()
@@ -45,6 +46,7 @@ def main() -> None:
         parts_dir=parts_dir,
         delay_seconds=args.delay,
         error_path=args.error_log or args.output.with_suffix(".errors.tsv"),
+        workers=args.workers,
     )
     symbols = result["symbol"].nunique() if not result.empty else 0
     print(f"wrote {len(result):,} rows for {symbols:,} symbols to {args.output}")
