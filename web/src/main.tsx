@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 import { readableNotes } from "./research-copy";
 const RecoverySection = lazy(() => import("./components/RecoverySection"));
+const ReplicationSection = lazy(() => import("./components/ReplicationSection"));
 const ResearchOverview = lazy(() => import("./components/ResearchOverview"));
 
 const NavChart = lazy(() => import("./components/MicrocapCharts").then((module) => ({ default: module.NavChart })));
@@ -144,7 +145,7 @@ function MicrocapSubTabs({ scope, onChange }: { scope: MicrocapScope; onChange: 
 function StyleSubTabs({ scope, onChange }: { scope: StyleScope; onChange: (value: StyleScope) => void }) { return <div className="sub-tabs" aria-label="市场长期风格研究子主题"><button className={scope === "indices" ? "active" : ""} onClick={() => onChange("indices")}>指数与 ETF</button><button className={scope === "barra" ? "active" : ""} onClick={() => onChange("barra")}>Barra 风格因子研究（18年）</button></div>; }
 
 function MicrocapPage({ scope, onScopeChange }: { scope: MicrocapScope; onScopeChange: (value: MicrocapScope) => void }) {
-  return <><MicrocapSubTabs scope={scope} onChange={onScopeChange}/>{scope === "cross-market" ? <LiquidityPage embedded/> : <><RecoverySection scope="microcap"/><MicrocapPageContent/></>}</>;
+  return <><MicrocapSubTabs scope={scope} onChange={onScopeChange}/>{scope === "cross-market" ? <LiquidityPage embedded/> : <><ReplicationSection scope="microcap"/><RecoverySection scope="microcap"/><MicrocapPageContent/></>}</>;
 }
 
 function MicrocapPageContent() {
@@ -227,7 +228,7 @@ function BarraPage() {
 }
 
 function CashflowPage() {
-  return <><CashflowPageContent/><RecoverySection scope="cashflow"/></>;
+  return <><ReplicationSection scope="cashflow"/><CashflowPageContent/><RecoverySection scope="cashflow"/></>;
 }
 
 function CashflowPageContent() {

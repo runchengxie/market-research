@@ -79,6 +79,11 @@ h1 { margin: 10px 0 12px; font: 700 clamp(36px, 6vw, 70px)/.98 "Noto Serif SC", 
 .market-card strong.ready { color: #b64d33; }
 .market-card strong.pending { color: #81796e; }
 .table-scroll { overflow-x: auto; }
+.replication-section { margin-bottom: 32px; min-width: 0; }
+.replication-section > .evidence-grid { margin-bottom: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.replication-section .evidence-card > p { line-height: 1.8; }
+.replication-section .table-scroll { max-width: 100%; }
+.replication-section th { white-space: nowrap; }
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th, td { border-bottom: 1px solid #e2dbd0; padding: 10px 12px; text-align: left; white-space: nowrap; }
 th { color: #81796e; font: 10px "DM Mono", monospace; letter-spacing: .03em; text-transform: uppercase; }
@@ -140,3 +145,4 @@ tr:hover td { background: #f0e9df; }
 .recovery-method { margin: 24px 0; font-size: 13px; line-height: 1.8; }
 .recovery-method summary { cursor: pointer; margin-bottom: 16px; }
 @media (max-width: 900px) { .evidence-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .replication-section > .evidence-grid { grid-template-columns: 1fr; } }
