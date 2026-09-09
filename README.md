@@ -21,7 +21,7 @@ uv run market-research report index-study --study studies/index_replication/stud
 `studies/index_replication/README.md`。
 
 新开发路径为 `/home/richard/code/quant/quant-market-research`。
-旧主检出及其已有 worktree 暂时保留，避免打断其他在途任务；详见迁移说明。
+迁移后旧路径保留兼容链接及已有 worktree，避免打断其他在途任务；详见 `docs/quant-family-migration.md`。
 
 本项目统一承接并 supersede `index-research` 与 `market-liquidity-profiles` 的独立发布职责。旧仓库保留历史代码和研究记录；持续维护的代码、公开页面和派生快照集中在这里。本项目是 canonical research entry point，旧仓库仅作为 legacy archive。
 
