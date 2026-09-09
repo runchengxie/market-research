@@ -55,6 +55,8 @@ def _build_parser() -> argparse.ArgumentParser:
     style.add_argument("--study", required=True)
     global_six = report_subparsers.add_parser("global-six-market")
     global_six.add_argument("--study", required=True)
+    index_study = report_subparsers.add_parser("index-study")
+    index_study.add_argument("--study", required=True)
     validate = subparsers.add_parser("validate")
     validate.add_argument("--config", required=True)
     fetch = subparsers.add_parser("fetch")
@@ -76,6 +78,10 @@ def main(argv: list[str] | None = None) -> int:
         raise
     if args.command == "config" and args.config_command == "inspect":
         print(json.dumps({"output_root": str(Path(args.output_root).expanduser().resolve())}))
+        return 0
+    if args.command == "report" and args.report_command == "index-study":
+        from .studies.index_study import run_study
+        print(run_study(Path(args.study)))
         return 0
     if args.command == "report" and args.report_command == "style-factors":
         study = _load_yaml(Path(args.study))

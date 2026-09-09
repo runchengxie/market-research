@@ -101,18 +101,18 @@ def reconstruct_smallest_cap_index_from_parquet(
             WHERE rank <= ?
         )
         SELECT trade_date AS date,
-               AVG(next_adj_close / adj_close - 1) FILTER (
+               CASE WHEN COUNT(*) = COUNT(*) FILTER (
                    WHERE next_stock_date = next_trade_date AND next_adj_close > 0
-               ) AS return,
+               ) THEN AVG(next_adj_close / adj_close - 1) FILTER (
+                   WHERE next_stock_date = next_trade_date AND next_adj_close > 0
+               ) END AS return,
                COUNT(*) AS selected_count,
                COUNT(*) FILTER (
                    WHERE next_stock_date = next_trade_date AND next_adj_close > 0
                ) AS priced_count
         FROM selected
         GROUP BY trade_date
-        HAVING COUNT(*) FILTER (
-                   WHERE next_stock_date = next_trade_date AND next_adj_close > 0
-               ) > 0
+        HAVING MAX(next_trade_date) IS NOT NULL
         ORDER BY trade_date
     """
     connection = duckdb.connect()
@@ -130,10 +130,13 @@ def _calculate_returns(selected: pd.DataFrame, result: pd.DataFrame) -> pd.DataF
     valid["daily_return"] = valid["next_adj_close"] / valid["adj_close"] - 1
     returns = valid.groupby("date")["daily_return"].mean().rename("return")
     result = result.merge(returns, left_on="date", right_index=True, how="left")
-    return result.loc[result["return"].notna()].sort_values("date").reset_index(drop=True)
+    result.loc[result["priced_count"].ne(result["selected_count"]), "return"] = float("nan")
+    return result.sort_values("date").reset_index(drop=True)
 
 
 def build_nav(returns: pd.DataFrame) -> pd.DataFrame:
+    if returns["return"].isna().any():
+        raise ValueError("missing selected holding prices: resolve valuation before building NAV")
     result = returns.copy()
     result["nav"] = (1 + result["return"].astype(float)).cumprod()
     return result

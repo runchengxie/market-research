@@ -69,3 +69,22 @@ def test_reconstruct_smallest_cap_index_from_parquet(tmp_path):
     result = reconstruct_smallest_cap_index_from_parquet(tmp_path, constituent_count=1)
 
     assert result.loc[0, "return"] == pytest.approx(0.1)
+
+
+@pytest.mark.parametrize("engine", ["pandas", "duckdb"])
+def test_missing_selected_price_blocks_instead_of_reweighting(tmp_path, engine):
+    from market_research.indexes import reconstruct_smallest_cap_index, reconstruct_smallest_cap_index_from_parquet, build_nav
+
+    panel = _panel().drop(index=3)  # B has no next-day quote; A rises 10%.
+    if engine == "pandas":
+        result = reconstruct_smallest_cap_index(panel, constituent_count=2)
+    else:
+        raw = panel.rename(columns={"symbol": "ts_code", "date": "trade_date", "market_cap": "total_mv"})
+        raw["trade_date"] = raw["trade_date"].astype(str)
+        raw.to_parquet(tmp_path / "bars.parquet")
+        result = reconstruct_smallest_cap_index_from_parquet(tmp_path, constituent_count=2)
+    assert result.iloc[0].selected_count == 2
+    assert result.iloc[0].priced_count == 1
+    assert pd.isna(result.iloc[0]["return"])
+    with pytest.raises(ValueError, match="missing"):
+        build_nav(result)
