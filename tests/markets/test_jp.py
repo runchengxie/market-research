@@ -43,6 +43,20 @@ def test_jp_adapter_respects_as_of(tmp_path: Path):
     assert len(panel) == 1
 
 
+def test_jp_adapter_can_limit_symbols_before_building_panel(tmp_path: Path):
+    from market_research.markets.jp import build_jp_panel
+
+    daily = tmp_path / "daily" / "2026"
+    daily.mkdir(parents=True)
+    pd.DataFrame(
+        {"Date": ["2026-01-01", "2026-01-01"], "Code": [13010, 72030], "C": [100.0, 200.0], "Vo": [1000.0, 2000.0], "Va": [100000.0, 400000.0]}
+    ).to_parquet(daily / "equities_bars_daily_202601.parquet")
+
+    panel, _ = build_jp_panel(tmp_path, symbols={"13010"})
+
+    assert panel["symbol"].tolist() == ["13010"]
+
+
 def test_jp_adapter_joins_optional_market_cap_sidecar(tmp_path: Path):
     from market_research.markets.jp import build_jp_panel
 
@@ -54,6 +68,25 @@ def test_jp_adapter_joins_optional_market_cap_sidecar(tmp_path: Path):
     valuation = tmp_path / "market_cap.parquet"
     pd.DataFrame(
         {"Date": ["2026-01-02"], "Code": ["13010"], "MarketCap": [2_000_000_000.0]}
+    ).to_parquet(valuation)
+
+    panel, metadata = build_jp_panel(tmp_path, market_cap_path=valuation)
+
+    assert panel.loc[0, "market_cap"] == 2_000_000_000.0
+    assert metadata.quality_status == "verified"
+
+
+def test_jp_adapter_calculates_market_cap_from_shares_sidecar(tmp_path: Path):
+    from market_research.markets.jp import build_jp_panel
+
+    daily = tmp_path / "daily" / "2026"
+    daily.mkdir(parents=True)
+    pd.DataFrame(
+        {"Date": ["2026-01-02"], "Code": [13010], "C": [100.0], "Vo": [1000.0], "Va": [100000.0]}
+    ).to_parquet(daily / "equities_bars_daily_2026.parquet")
+    valuation = tmp_path / "shares.parquet"
+    pd.DataFrame(
+        {"Date": ["2026-01-02"], "Code": ["13010"], "SharesOutstanding": [20_000_000.0]}
     ).to_parquet(valuation)
 
     panel, metadata = build_jp_panel(tmp_path, market_cap_path=valuation)
