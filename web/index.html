@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f0e8" />
+    <script>
+      (() => {
+        const stored = localStorage.getItem("market-research-theme");
+        const choice = stored === "dark" || stored === "light" || stored === "system" ? stored : "system";
+        const dark = choice === "dark" || (choice === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
     <title>Quant Market Research · 市场研究笔记</title>
   </head>
   <body>
