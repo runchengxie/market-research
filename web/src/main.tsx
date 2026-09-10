@@ -2,6 +2,7 @@ import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import { readableNotes } from "./research-copy";
+import { applyTheme, persistThemeChoice, readThemeChoice, type ThemeChoice } from "./theme";
 const RecoverySection = lazy(() => import("./components/RecoverySection"));
 const ReplicationSection = lazy(() => import("./components/ReplicationSection"));
 const ResearchOverview = lazy(() => import("./components/ResearchOverview"));
@@ -315,10 +316,22 @@ function App() {
   const [tab, setTab] = useState<Tab>(validTabs.includes(hash) ? hash : "overview");
   const [microcapScope, setMicrocapScope] = useState<MicrocapScope>("a-share");
   const [styleScope, setStyleScope] = useState<StyleScope>(initialHash === "style-factors-18y" ? "barra" : "indices");
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(() => readThemeChoice(window.localStorage));
+  const [resolvedTheme, setResolvedTheme] = useState(() => applyTheme(themeChoice, window.matchMedia("(prefers-color-scheme: dark)").matches, document.documentElement));
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const update = () => setResolvedTheme(applyTheme(themeChoice, media.matches, document.documentElement));
+    update();
+    if (themeChoice !== "system") return undefined;
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
+  }, [themeChoice]);
+  const themeLabel = themeChoice === "system" ? `跟随系统 · ${resolvedTheme === "dark" ? "暗" : "亮"}` : themeChoice === "dark" ? "暗色" : "亮色";
+  const cycleTheme = () => { const next: ThemeChoice = themeChoice === "light" ? "dark" : themeChoice === "dark" ? "system" : "light"; persistThemeChoice(window.localStorage, next); setThemeChoice(next); };
   useEffect(() => { const onHash = () => { const next = window.location.hash.slice(1) as Tab; if (next === "microcap-recovery") { setMicrocapScope("a-share"); setTab("microcap"); } else if (next === "style-factors-18y") { setStyleScope("barra"); setTab("style"); } else if (validTabs.includes(next)) { if (next === "style") setStyleScope("indices"); setTab(next); } }; window.addEventListener("hashchange", onHash); return () => window.removeEventListener("hashchange", onHash); }, []);
   const page = tab === "microcap" || tab === "cross-market" ? <MicrocapPage scope={tab === "cross-market" ? "cross-market" : microcapScope} onScopeChange={setMicrocapScope}/> : tab === "style" || tab === "style-factors-18y" ? <StylePage scope={styleScope} onScopeChange={setStyleScope}/> : tab === "indices" ? <IndicesPage/> : tab === "cashflow" || tab === "cashflow-recovery" ? <CashflowPage/> : tab === "liquidity" ? <LiquidityPage/> : <Overview/>;
   const navItems: [Tab, string][] = [["overview", "档案总览"], ["cashflow", "现金流历史研究"], ["microcap", "小微盘历史研究"], ["style", "长期风格历史研究"]];
-  return <div className="app"><header className="site-header"><div className="site-masthead"><div><span className="brand-kicker">历史研究档案 · 证据优先</span><h1>市场研究档案</h1><p className="site-deck">汇集历史市场研究，注明研究进展、数据来源和使用限制。</p></div><div className="site-meta"><span>历史档案 · 研究中 · 待补数据</span><strong>公开汇总结果 · 仅描述历史</strong></div></div><nav className="site-nav" aria-label="研究主题">{navItems.map(([key, label]) => <a key={key} className={tab === key || (key === "cashflow" && tab === "cashflow-recovery") || (key === "style" && (tab === "indices" || tab === "style-factors-18y")) || (key === "cross-market" && tab === "liquidity") ? "active" : ""} href={`#${key}`} onClick={() => setTab(key)}>{label}</a>)}</nav></header><main className="site-main">{page}</main><footer className="site-footer"><span>市场研究档案 · 历史证据优先</span><a href="https://github.com/runchengxie/quant-market-research">查看 GitHub 仓库 ↗</a></footer></div>;
+  return <div className="app"><header className="site-header"><div className="site-masthead"><div><span className="brand-kicker">历史研究档案 · 证据优先</span><h1>市场研究档案</h1><p className="site-deck">汇集历史市场研究，注明研究进展、数据来源和使用限制。</p></div><div className="site-meta"><span>历史档案 · 研究中 · 待补数据</span><strong>公开汇总结果 · 仅描述历史</strong><button className="theme-toggle" type="button" onClick={cycleTheme} aria-label={`切换主题，当前为${themeLabel}`}>主题：{themeLabel}</button></div></div><nav className="site-nav" aria-label="研究主题">{navItems.map(([key, label]) => <a key={key} className={tab === key || (key === "cashflow" && tab === "cashflow-recovery") || (key === "style" && (tab === "indices" || tab === "style-factors-18y")) || (key === "cross-market" && tab === "liquidity") ? "active" : ""} href={`#${key}`} onClick={() => setTab(key)}>{label}</a>)}</nav></header><main className="site-main">{page}</main><footer className="site-footer"><span>市场研究档案 · 历史证据优先</span><a href="https://github.com/runchengxie/quant-market-research">查看 GitHub 仓库 ↗</a></footer></div>;
 }
 
 function Overview() { return <ResearchOverview/>; }
