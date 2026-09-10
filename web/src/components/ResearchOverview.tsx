@@ -36,6 +36,14 @@ export function OverviewContent({recovery, barra}: {recovery: Snapshot | null; b
     && typeof history.factor_count === 'number' && Number.isInteger(history.factor_count) && history.factor_count > 0;
   return <>
     <div className="theme-heading"><div><span className="section-kicker">研究总览</span><h2>研究到了哪一步，有哪些发现？</h2><p>先看结论和待解决的问题，再到专题里查看数据、图表与计算方法。</p></div><span className="asof">数据日期按专题分别标注</span></div>
+    <section className="featured-study" aria-label="Featured Quant Research study">
+      <div>
+        <span className="section-kicker">Featured Quant Research</span>
+        <h2>18 年 A 股风格因子动态：收益、稳定性与市场阶段</h2>
+        <p>这些风格因子在不同 A 股市场阶段是否持续存在？研究使用历史分组收益、年度阶段和相关性来回答这个问题；IC、样本外验证和统计显著性仍待补充。</p>
+      </div>
+      <a href="#style-factors-18y">阅读旗舰研究 ↗</a>
+    </section>
     <section className="evidence-grid" aria-label="各专题研究进展">
       <EvidenceCard title="现金流" href="#cashflow" status={cashflow ? '指数数据已检查' : '数据暂不可用'}
         conclusion={cashflow ? cashflow.longest_completed_underwater_calendar_days == null ? '800现金流价格指数在样本内尚无完整的回本记录。' : `800现金流价格指数在样本内，最长一次从高点跌落后等待了 ${dayCount(cashflow.longest_completed_underwater_calendar_days)}才回本。` : '数据恢复后显示回本统计。'}
