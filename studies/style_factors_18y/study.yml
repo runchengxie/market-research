@@ -5,4 +5,6 @@ quantiles: 10
 holding_period: 1
 rebalance_frequency: month_end
 factor_families: [size, value, momentum, liquidity]
+core_factor_families: [size, value, momentum, liquidity]
+historical_snapshot_factor_count: 19
 raw_data_in_git: false

@@ -31,6 +31,8 @@ test("研究总览使用三个研究域和小微盘子主题", () => {
   assert.match(source, /因子相关性/);
   assert.match(source, /历史多空合成收益/);
   assert.match(source, /Barra 风格因子研究（18年）/);
+  assert.match(source, /style-factors-18y/);
+  assert.match(source, /setStyleScope\("barra"\)/);
   assert.match(source, /ResearchBarChart/);
   assert.match(source, /ResearchLineChart/);
   assert.match(source, /稳定性观察：按月与按阶段/);
@@ -42,6 +44,13 @@ test("研究总览使用三个研究域和小微盘子主题", () => {
   assert.match(source, /时间窗口/);
   assert.match(source, /各市场最近可用数据/);
   assert.doesNotMatch(source, /跨市场研究中/);
+});
+
+test("18年风格研究以经验研究问题呈现并明确Barra边界", () => {
+  assert.match(source, /18 年 A 股风格因子动态：收益、稳定性与市场阶段/);
+  assert.match(source, /这些风格因子在不同 A 股市场阶段是否持续存在/);
+  assert.match(source, /Barra-like/);
+  assert.match(source, /IC、样本外验证和统计显著性仍待补充/);
 });
 
 test("收益图表为缺失值保留 N/A 标记", () => {
