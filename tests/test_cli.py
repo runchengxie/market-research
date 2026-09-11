@@ -100,3 +100,38 @@ def test_smallcap_turnover_report_writes_daily_stats_and_summary(tmp_path: Path)
     assert manifest["schema_version"] == "smallcap_turnover.v1"
     assert manifest["artifacts"][0]["path"] == "smallcap_turnover_daily.csv"
     assert manifest["artifacts"][0]["bytes"] > 0
+
+
+def test_smallcap_turnover_history_report_marks_partial_eligibility(tmp_path: Path):
+    from market_research.cli import main
+
+    daily = tmp_path / "daily"
+    basic = tmp_path / "daily_basic"
+    daily.mkdir()
+    basic.mkdir()
+    pd.DataFrame(
+        {
+            "ts_code": ["000001.SZ", "000002.SZ"],
+            "trade_date": [20080102, 20080102],
+            "amount": [10.0, 20.0],
+        }
+    ).to_parquet(daily / "part.parquet", index=False)
+    pd.DataFrame(
+        {
+            "ts_code": ["000001.SZ", "000002.SZ"],
+            "trade_date": [20080102, 20080102],
+            "total_mv": [100.0, 200.0],
+        }
+    ).to_parquet(basic / "part.parquet", index=False)
+    config = tmp_path / "config.toml"
+    config.write_text(
+        f'output_root = "{tmp_path / "output"}"\n\n[smallcap_turnover_history]\n'
+        f'daily_root = "{daily}"\ndaily_basic_root = "{basic}"\n',
+        encoding="utf-8",
+    )
+
+    assert main(["report", "smallcap-turnover-history", "--config", str(config)]) == 0
+    summary = json.loads((tmp_path / "output" / "smallcap_turnover_history_summary.json").read_text(encoding="utf-8"))
+    assert summary["quality_status"] == "incomplete"
+    assert "ST" in summary["source"]["universe_filter"]
+    assert (tmp_path / "output" / "smallcap_turnover_history_daily.csv").exists()

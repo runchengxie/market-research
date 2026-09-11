@@ -54,5 +54,9 @@ Git 对二进制文件难以逐行审查的事实。
 - `smallcap_turnover_summary.json`：覆盖区间和研究限制；
 - `smallcap_turnover_manifest.json`：schema、文件大小、行数和 SHA-256。
 
+2008 年起的扩展版本使用不同的历史数据源，文件名加上 `history` 后缀，并在 summary
+和 manifest 中标记 `quality_status = incomplete`。这是因为历史源没有可靠的 ST 和停牌
+字段；它可以作为长期描述性序列，但不能与 2015 年后的清洗版本直接混为一个质量等级。
+
 页面如需展示，只应复制经过审查的摘要或降采样结果到 `web/public/data`，不发布完整
 逐股票逐日面板。

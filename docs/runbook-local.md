@@ -47,6 +47,16 @@ uv run market-research report smallcap-turnover --config configs/local.toml
 总和、均值、中位数和分位数。完整的 `smallcap_turnover_daily.csv`、摘要和 manifest
 写入配置的仓库外 `output_root`，不会自动进入 Git 或公开页面。
 
+如果需要 2008 年起的扩展版本：
+
+```bash
+uv run market-research report smallcap-turnover-history --config configs/local.toml
+```
+
+该版本连接 2008 年起的 daily 与 daily_basic，覆盖尽可能长的历史，但由于历史源没有
+可靠的 ST 和停牌字段，输出会标记为 `incomplete`，不能与 2015 年后的清洗版本直接混为
+同一质量等级。
+
 ## 当前数据目录
 
 - A 股日频清洗数据：`/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_daily_clean_latest/data`

@@ -28,3 +28,9 @@ index_end_date = "20260821"
 result_root = "/home/richard/data/quant/market-data-platform/strategy_outputs/style-factors/weekly-20260904"
 size_quantiles = 10
 holding_period = 1
+
+[smallcap_turnover_history]
+# 2008+ raw sources. These do not include reliable historical ST/suspension flags.
+daily_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20080102_20260821_union_daily"
+daily_basic_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily_basic/a_share_all_20080102_20260821_union_daily_basic"
+start_date = "20080102"
