@@ -37,6 +37,16 @@ uv run market-research report microcap --config configs/local.toml
 
 该结果使用最小市值 400 只股票等权的研究规则，不代表 Wind 官方 `8841431.WI` 指数。计算中没有模拟交易成本、涨跌停成交、停牌成交、市场冲击和策略容量。
 
+## 构建最小市值股票成交额统计
+
+```bash
+uv run market-research report smallcap-turnover --config configs/local.toml
+```
+
+该报告按每日总市值选取最小的 10、50、100、200、400 和 1000 只 A 股，统计成交额
+总和、均值、中位数和分位数。完整的 `smallcap_turnover_daily.csv`、摘要和 manifest
+写入配置的仓库外 `output_root`，不会自动进入 Git 或公开页面。
+
 ## 当前数据目录
 
 - A 股日频清洗数据：`/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_daily_clean_latest/data`
