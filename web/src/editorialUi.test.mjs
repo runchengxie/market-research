@@ -57,3 +57,10 @@ test("收益图表为缺失值保留 N/A 标记", () => {
   assert.match(researchCharts, /未提供/);
   assert.match(source, /当前窗口没有对应回报口径的数据/);
 });
+
+test("小微盘页面呈现成交额研究的覆盖与审计边界", () => {
+  assert.match(source, /小微盘成交额研究/);
+  assert.match(source, /2008 年起历史口径/);
+  assert.match(source, /重叠审计/);
+  assert.match(source, /smallcap_turnover\.json/);
+});

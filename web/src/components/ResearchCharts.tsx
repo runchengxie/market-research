@@ -3,7 +3,7 @@ import { echarts, type EChartsOption } from "./echarts";
 import { readChartTheme } from "../theme";
 
 type ChartRow = Record<string, string>;
-type Series = { name: string; values: number[]; color: string };
+type Series = { name: string; values: Array<number | null>; color: string };
 
 function Chart({ option }: { option: EChartsOption }) {
   const ref = useRef<HTMLDivElement>(null);
