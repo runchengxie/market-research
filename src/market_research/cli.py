@@ -23,6 +23,7 @@ from .indexes import (
 from .reports import build_liquidity_report, write_report_bundle
 from .microcap import write_microcap_snapshot
 from .smallcap_turnover import DEFAULT_RANK_COUNTS, build_smallcap_turnover_stats
+from .smallcap_turnover_audit import build_overlap_audit
 from .smallcap_turnover_history import load_historical_turnover_panel
 from .index_research import (
     build_cashflow_snapshot,
@@ -49,6 +50,8 @@ def _build_parser() -> argparse.ArgumentParser:
     smallcap_turnover.add_argument("--config", required=True)
     smallcap_turnover_history = report_subparsers.add_parser("smallcap-turnover-history")
     smallcap_turnover_history.add_argument("--config", required=True)
+    smallcap_turnover_audit = report_subparsers.add_parser("smallcap-turnover-audit")
+    smallcap_turnover_audit.add_argument("--config", required=True)
     microcap = report_subparsers.add_parser("microcap")
     microcap.add_argument("--config", required=True)
     indices = report_subparsers.add_parser("indices")
@@ -246,6 +249,43 @@ def main(argv: list[str] | None = None) -> int:
                 {"path": summary_artifact.name, "format": "json"},
             ],
             "storage_policy": "full research output remains outside the Git repository; publish only reviewed derived summaries",
+        }
+        manifest_artifact.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+        return 0
+    if args.command == "report" and args.report_command == "smallcap-turnover-audit":
+        config = _load_config(Path(args.config))
+        section = config.get("smallcap_turnover_audit", {})
+        if not isinstance(section, dict):
+            raise RuntimeError("smallcap_turnover_audit must be a mapping")
+        clean_path = Path(str(section.get("clean_daily_path", "")))
+        historical_path = Path(str(section.get("historical_daily_path", "")))
+        if not clean_path.exists() or not historical_path.exists():
+            raise RuntimeError("clean_daily_path and historical_daily_path are required")
+        audit = build_overlap_audit(_read_table(clean_path), _read_table(historical_path))
+        output_root = Path(config.get("output_root", "outputs"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        audit_artifact = output_root / "smallcap_turnover_overlap_audit.csv"
+        summary_artifact = output_root / "smallcap_turnover_overlap_audit_summary.json"
+        manifest_artifact = output_root / "smallcap_turnover_overlap_audit_manifest.json"
+        audit.to_csv(audit_artifact, index=False)
+        summary = {
+            "method": "overlap comparison of clean 2015+ and incomplete historical smallcap turnover summaries",
+            "rank_counts": [int(value) for value in audit["rank_count"]] if not audit.empty else [],
+            "rows": int(len(audit)),
+            "common_start": audit["common_start"].min() if not audit.empty else None,
+            "common_end": audit["common_end"].max() if not audit.empty else None,
+            "quality_note": "Differences are diagnostic only; historical ST/suspension eligibility is incomplete.",
+        }
+        summary_artifact.write_text(json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+        manifest = {
+            "schema_version": "smallcap_turnover_overlap_audit.v1",
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "source_artifacts": [str(clean_path), str(historical_path)],
+            "artifacts": [
+                {"path": audit_artifact.name, "format": "csv", "rows": int(len(audit)), "bytes": audit_artifact.stat().st_size, "sha256": hashlib.sha256(audit_artifact.read_bytes()).hexdigest()},
+                {"path": summary_artifact.name, "format": "json"},
+            ],
+            "storage_policy": "audit outputs remain outside the Git repository",
         }
         manifest_artifact.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
         return 0

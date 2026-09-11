@@ -135,3 +135,30 @@ def test_smallcap_turnover_history_report_marks_partial_eligibility(tmp_path: Pa
     assert summary["quality_status"] == "incomplete"
     assert "ST" in summary["source"]["universe_filter"]
     assert (tmp_path / "output" / "smallcap_turnover_history_daily.csv").exists()
+
+
+def test_smallcap_turnover_audit_writes_overlap_summary(tmp_path: Path):
+    from market_research.cli import main
+
+    clean = tmp_path / "clean.csv"
+    historical = tmp_path / "historical.csv"
+    rows = {
+        "date": ["2015-01-05", "2015-01-06"],
+        "rank_count": [10, 10],
+        "selected_count": [10, 10],
+        "turnover_median": [100.0, 200.0],
+    }
+    pd.DataFrame(rows).to_csv(clean, index=False)
+    pd.DataFrame({**rows, "turnover_median": [105.0, 160.0]}).to_csv(historical, index=False)
+    config = tmp_path / "config.toml"
+    config.write_text(
+        f'output_root = "{tmp_path / "output"}"\n\n[smallcap_turnover_audit]\n'
+        f'clean_daily_path = "{clean}"\nhistorical_daily_path = "{historical}"\n',
+        encoding="utf-8",
+    )
+
+    assert main(["report", "smallcap-turnover-audit", "--config", str(config)]) == 0
+    result = pd.read_csv(tmp_path / "output" / "smallcap_turnover_overlap_audit.csv")
+    assert result.loc[0, "common_days"] == 2
+    assert result.loc[0, "within_10pct_ratio"] == 0.5
+    assert (tmp_path / "output" / "smallcap_turnover_overlap_audit_manifest.json").exists()
