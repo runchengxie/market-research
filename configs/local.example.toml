@@ -3,7 +3,7 @@ as_of = ""
 use_duckdb = true
 
 [sources]
-a_share_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20150101_20260907_daily_clean/data"
+a_share_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_daily_clean_latest/data"
 hk_daily_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/daily"
 hk_valuation_root = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/valuation"
 hk_instruments_path = "/mnt/data/cold4t/hk-liquidity/assets/rqdata/hk/instruments/hk_all_instruments_20260526.parquet"

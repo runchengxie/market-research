@@ -151,7 +151,7 @@ cross-market report snapshot + site data
 1. 从 `market-liquidity-profiles` 迁移或重写容量核心，并保留其现有公式和测试语义；
 2. 从 `index-research` 迁移微盘重建、年度收益、滚动 CAGR 和回撤计算；
 3. 将原项目特有的 CLI 和路径读取改为新项目配置解析；
-4. 新项目通过适配器消费 `/home/richard/data/market-data-platform`、`/mnt/data/cold4t` 和 `nira` 数据，不复制原始文件；
+4. 新项目通过适配器消费 `/home/richard/data/quant/market-data-platform`、`/mnt/data/cold4t` 和 `nira` 数据，不复制原始文件；
 5. 每个迁移单元先建立等价测试，再接入统一契约；
 6. 旧仓库在新项目完成最小闭环前保持可运行，不做删除性清理。
 
