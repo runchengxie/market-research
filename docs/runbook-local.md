@@ -57,6 +57,15 @@ uv run market-research report smallcap-turnover-history --config configs/local.t
 可靠的 ST 和停牌字段，输出会标记为 `incomplete`，不能与 2015 年后的清洗版本直接混为
 同一质量等级。
 
+生成两套口径的重叠期审计：
+
+```bash
+uv run market-research report smallcap-turnover-audit --config configs/local.toml
+```
+
+该命令比较共同日期和 N 分组下的成交额中位数差异，并输出 5%、10% 和 25% 误差范围
+覆盖比例。它用于发现口径变化，不把历史源提升为已验证数据。
+
 ## 当前数据目录
 
 - A 股日频清洗数据：`/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_daily_clean_latest/data`

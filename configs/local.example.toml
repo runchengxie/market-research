@@ -34,3 +34,8 @@ holding_period = 1
 daily_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily/a_share_all_20080102_20260821_union_daily"
 daily_basic_root = "/home/richard/data/quant/market-data-platform/assets/tushare/a_share/daily_basic/a_share_all_20080102_20260821_union_daily_basic"
 start_date = "20080102"
+
+[smallcap_turnover_audit]
+# Compare the two external report artifacts on their common date/rank range.
+clean_daily_path = "/home/richard/data/market-research/outputs/smallcap_turnover_daily.csv"
+historical_daily_path = "/home/richard/data/market-research/outputs/smallcap_turnover_history_daily.csv"
