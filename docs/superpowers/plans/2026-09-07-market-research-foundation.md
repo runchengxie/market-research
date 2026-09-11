@@ -105,7 +105,7 @@ Expected: PASS.
 
 - [ ] **Step 5: Document local data roots**
 
-Document the known roots: `/home/richard/data/market-data-platform/assets/tushare/a_share`, `/mnt/data/cold4t/hk-liquidity`, `/mnt/data/cold4t/simfin`, and `/mnt/data/cold4t/nira/current/guan-japanese-nira/data`. State that the example config contains no credentials. Add `.gitignore` rules for `configs/local.toml`, `outputs/`, `.venv/`, caches, and raw market-data extensions.
+Document the known roots: `/home/richard/data/quant/market-data-platform/assets/tushare/a_share`, `/mnt/data/cold4t/hk-liquidity`, `/mnt/data/cold4t/simfin`, and `/mnt/data/cold4t/nira/current/guan-japanese-nira/data`. State that the example config contains no credentials. Add `.gitignore` rules for `configs/local.toml`, `outputs/`, `.venv/`, caches, and raw market-data extensions.
 
 - [ ] **Step 6: Commit**
 
