@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import tomllib
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +22,7 @@ from .indexes import (
 )
 from .reports import build_liquidity_report, write_report_bundle
 from .microcap import write_microcap_snapshot
+from .smallcap_turnover import DEFAULT_RANK_COUNTS, build_smallcap_turnover_stats
 from .index_research import (
     build_cashflow_snapshot,
     build_etf_proxy_returns,
@@ -41,6 +44,8 @@ def _build_parser() -> argparse.ArgumentParser:
     report_subparsers = report.add_subparsers(dest="report_command")
     liquidity = report_subparsers.add_parser("liquidity")
     liquidity.add_argument("--config", required=True)
+    smallcap_turnover = report_subparsers.add_parser("smallcap-turnover")
+    smallcap_turnover.add_argument("--config", required=True)
     microcap = report_subparsers.add_parser("microcap")
     microcap.add_argument("--config", required=True)
     indices = report_subparsers.add_parser("indices")
@@ -126,6 +131,70 @@ def main(argv: list[str] | None = None) -> int:
         if not panels:
             raise RuntimeError("no configured market source produced a panel")
         write_report_bundle(build_liquidity_report(panels, metadata), Path(config.get("output_root", "outputs")))
+        return 0
+    if args.command == "report" and args.report_command == "smallcap-turnover":
+        config = _load_config(Path(args.config))
+        sources = config.get("sources", {})
+        a_share_root = Path(str(sources.get("a_share_root", ""))) if isinstance(sources, dict) else Path("")
+        if not a_share_root.exists():
+            raise RuntimeError("A-share source is required for smallcap-turnover report")
+        panel, metadata = build_a_share_panel(
+            a_share_root,
+            config.get("as_of") or None,
+            use_duckdb=bool(config.get("use_duckdb", False)),
+        )
+        stats = build_smallcap_turnover_stats(panel)
+        output_root = Path(config.get("output_root", "outputs"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        stats.to_csv(output_root / "smallcap_turnover_daily.csv", index=False)
+        summary = {
+            "method": "daily smallest A-share stocks ranked by total market cap",
+            "rank_counts": list(DEFAULT_RANK_COUNTS),
+            "observations": int(len(stats)),
+            "trading_days": int(stats["date"].nunique()) if not stats.empty else 0,
+            "coverage_start": stats["date"].min() if not stats.empty else None,
+            "coverage_end": stats["date"].max() if not stats.empty else None,
+            "source": metadata.as_dict(),
+            "caveats": [
+                "当前清洗面板仅保留成交额和总市值均为正的观测。",
+                "这是成交额描述性统计，不等同于策略容量或实际可成交金额。",
+                "最小 N 只按当日总市值排序，不能直接用于无滞后的交易回测。",
+            ],
+        }
+        (output_root / "smallcap_turnover_summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n",
+            encoding="utf-8",
+        )
+        artifact = output_root / "smallcap_turnover_daily.csv"
+        manifest = {
+            "schema_version": "smallcap_turnover.v1",
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "method": summary["method"],
+            "source": metadata.as_dict(),
+            "coverage": {
+                "start": summary["coverage_start"],
+                "end": summary["coverage_end"],
+                "trading_days": summary["trading_days"],
+            },
+            "artifacts": [
+                {
+                    "path": artifact.name,
+                    "format": "csv",
+                    "rows": int(len(stats)),
+                    "bytes": artifact.stat().st_size,
+                    "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                },
+                {
+                    "path": "smallcap_turnover_summary.json",
+                    "format": "json",
+                },
+            ],
+            "storage_policy": "full research output remains outside the Git repository; publish only reviewed derived summaries",
+        }
+        (output_root / "smallcap_turnover_manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n",
+            encoding="utf-8",
+        )
         return 0
     if args.command == "report" and args.report_command == "microcap":
         config = _load_config(Path(args.config))

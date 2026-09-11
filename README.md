@@ -54,6 +54,7 @@ uv run market-research config inspect --output-root outputs
 日股适配器目前只读取 `daily/*/equities_bars_daily_*.parquet`，并将 J-Quants 的 `Date`、`Code`、`C`、`Vo` 和 `Va` 映射到统一面板。当前 nira 快照没有配套的日频市值字段，因此日股的市值相关分析会标记为 `incomplete`，直到补充相应数据。
 
 架构和迁移范围见 `docs/superpowers/specs/2026-09-07-market-research-design.md`。首个报告包包括流动性汇总、覆盖率诊断、基于滞后流动性特征的机械容量面板，以及来源元数据。
+数据保存、Parquet/CSV 分工和公开发布边界见 `docs/data-storage-and-publication.md`。
 
 ## 迁移后的命令
 
@@ -63,6 +64,7 @@ uv run market-research report indices --config configs/local.toml
 uv run market-research report etf-pairs --config configs/local.toml
 uv run market-research report cashflow --config configs/local.toml
 uv run market-research report liquidity --config configs/local.toml
+uv run market-research report smallcap-turnover --config configs/local.toml
 uv run market-research validate --config configs/local.toml
 ```
 
