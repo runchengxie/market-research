@@ -23,6 +23,7 @@ from .indexes import (
 from .reports import build_liquidity_report, write_report_bundle
 from .microcap import write_microcap_snapshot
 from .smallcap_turnover import DEFAULT_RANK_COUNTS, build_smallcap_turnover_stats
+from .smallcap_turnover_history import load_historical_turnover_panel
 from .index_research import (
     build_cashflow_snapshot,
     build_etf_proxy_returns,
@@ -46,6 +47,8 @@ def _build_parser() -> argparse.ArgumentParser:
     liquidity.add_argument("--config", required=True)
     smallcap_turnover = report_subparsers.add_parser("smallcap-turnover")
     smallcap_turnover.add_argument("--config", required=True)
+    smallcap_turnover_history = report_subparsers.add_parser("smallcap-turnover-history")
+    smallcap_turnover_history.add_argument("--config", required=True)
     microcap = report_subparsers.add_parser("microcap")
     microcap.add_argument("--config", required=True)
     indices = report_subparsers.add_parser("indices")
@@ -195,6 +198,56 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n",
             encoding="utf-8",
         )
+        return 0
+    if args.command == "report" and args.report_command == "smallcap-turnover-history":
+        config = _load_config(Path(args.config))
+        section = config.get("smallcap_turnover_history", {})
+        if not isinstance(section, dict):
+            raise RuntimeError("smallcap_turnover_history must be a mapping")
+        daily_root = Path(str(section.get("daily_root", "")))
+        daily_basic_root = Path(str(section.get("daily_basic_root", "")))
+        panel, metadata = load_historical_turnover_panel(
+            daily_root,
+            daily_basic_root,
+            start_date=str(section["start_date"]) if section.get("start_date") else None,
+            end_date=str(section["end_date"]) if section.get("end_date") else config.get("as_of") or None,
+        )
+        stats = build_smallcap_turnover_stats(panel)
+        output_root = Path(config.get("output_root", "outputs"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        daily_artifact = output_root / "smallcap_turnover_history_daily.csv"
+        summary_artifact = output_root / "smallcap_turnover_history_summary.json"
+        manifest_artifact = output_root / "smallcap_turnover_history_manifest.json"
+        stats.to_csv(daily_artifact, index=False)
+        summary = {
+            "method": "historical daily smallest A-share stocks ranked by total market cap",
+            "rank_counts": list(DEFAULT_RANK_COUNTS),
+            "observations": int(len(stats)),
+            "trading_days": int(stats["date"].nunique()) if not stats.empty else 0,
+            "coverage_start": stats["date"].min() if not stats.empty else None,
+            "coverage_end": stats["date"].max() if not stats.empty else None,
+            "quality_status": metadata["quality_status"],
+            "source": metadata,
+            "caveats": [
+                "2008 年起历史源没有可靠的 ST 和停牌字段，不能等同于 2015 年后清洗口径。",
+                "历史报告只过滤成交额和总市值为正的观测。",
+                "这是成交额描述性统计，不等同于策略容量或实际可成交金额。",
+            ],
+        }
+        summary_artifact.write_text(json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+        manifest = {
+            "schema_version": "smallcap_turnover_history.v1",
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "method": summary["method"],
+            "source": metadata,
+            "coverage": {"start": summary["coverage_start"], "end": summary["coverage_end"], "trading_days": summary["trading_days"]},
+            "artifacts": [
+                {"path": daily_artifact.name, "format": "csv", "rows": int(len(stats)), "bytes": daily_artifact.stat().st_size, "sha256": hashlib.sha256(daily_artifact.read_bytes()).hexdigest()},
+                {"path": summary_artifact.name, "format": "json"},
+            ],
+            "storage_policy": "full research output remains outside the Git repository; publish only reviewed derived summaries",
+        }
+        manifest_artifact.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
         return 0
     if args.command == "report" and args.report_command == "microcap":
         config = _load_config(Path(args.config))

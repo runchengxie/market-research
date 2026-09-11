@@ -65,6 +65,7 @@ uv run market-research report etf-pairs --config configs/local.toml
 uv run market-research report cashflow --config configs/local.toml
 uv run market-research report liquidity --config configs/local.toml
 uv run market-research report smallcap-turnover --config configs/local.toml
+uv run market-research report smallcap-turnover-history --config configs/local.toml
 uv run market-research validate --config configs/local.toml
 ```
 
