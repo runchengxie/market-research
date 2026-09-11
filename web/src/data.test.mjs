@@ -38,3 +38,14 @@ test("does not publish the retired animal index dataset", () => {
   assert.equal(fs.existsSync(path.join(root, "animal")), false);
   assert.equal(fs.existsSync(path.join(root, "plant")), false);
 });
+
+test("publishes a lightweight smallcap turnover research snapshot", () => {
+  const summary = JSON.parse(fs.readFileSync(path.join(root, "smallcap_turnover.json"), "utf8"));
+  assert.equal(summary.schema_version, "smallcap_turnover_ui.v1");
+  assert.deepEqual(summary.clean.rank_counts, [10, 50, 100, 200, 400, 1000]);
+  assert.equal(summary.clean.quality_status, "verified");
+  assert.equal(summary.historical.quality_status, "incomplete");
+  assert.ok(summary.clean.annual.length >= 60);
+  assert.ok(summary.historical.annual.length >= 100);
+  assert.equal(summary.overlap_audit.length, 6);
+});

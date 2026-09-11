@@ -1,7 +1,8 @@
 {
-  "generated_at": "2026-09-08T00:23:46.319Z",
+  "generated_at": "2026-09-12T00:00:00+08:00",
   "sources": [
-    "market-research A-share rule reconstruction"
+    "market-research A-share rule reconstruction",
+    "smallcap turnover clean, historical and overlap-audit summaries"
   ],
   "markets": {
     "a_share": "published",
@@ -12,6 +13,7 @@
   "privacy": "Derived snapshot only; raw market data and local paths are excluded.",
   "included_snapshots": {
     "index_research_files": 22,
+    "smallcap_turnover_files": 1,
     "raw_data_published": false
   }
 }
