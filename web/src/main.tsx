@@ -20,8 +20,8 @@ type Tab = "microcap-recovery" | "cashflow-recovery" | "overview" | "microcap" |
 type MicrocapScope = "a-share" | "cross-market";
 type StyleScope = "indices" | "barra";
 type Series = { name: string; values: Array<number | null>; color: string };
-type TurnoverAnnual = { year: number; rank_count: number; annual_median_turnover: number; annual_mean_turnover: number; annual_median_total_turnover: number; trading_days: number };
-type TurnoverSnapshot = { coverage_start: string; coverage_end: string; quality_status: "verified" | "incomplete"; rank_counts: number[]; annual: TurnoverAnnual[] };
+type TurnoverPeriod = { year?: number; month?: string; rank_count: number; turnover_median: number; trading_days: number; median_coverage_ratio: number; min_selected_count: number };
+type TurnoverSnapshot = { coverage_start: string; coverage_end: string; quality_status: "verified" | "incomplete"; rank_counts: number[]; annual: TurnoverPeriod[]; monthly: TurnoverPeriod[] };
 type TurnoverAudit = { rank_count: number; common_days: number; common_start: string; common_end: string; mean_abs_relative_diff_turnover_median: number; p90_abs_relative_diff_turnover_median: number; within_5pct_ratio: number; within_10pct_ratio: number; within_25pct_ratio: number; quality_note: string };
 type SmallcapTurnoverData = { schema_version: string; method: string; clean: TurnoverSnapshot; historical: TurnoverSnapshot; overlap_audit: TurnoverAudit[]; caveats: string[] };
 type LiquidityBucket = { label: string; count?: number; median_usd: number; mean_usd: number; p90_usd?: number; observations?: number };
@@ -159,16 +159,20 @@ function formatTurnover(value: number) {
 function SmallcapTurnoverSection() {
   const { data, error } = useJson<SmallcapTurnoverData>("smallcap_turnover.json");
   const [rankCount, setRankCount] = useState(400);
+  const [granularity, setGranularity] = useState<"annual" | "monthly">("annual");
   if (error) return <div className="callout compact"><span className="section-kicker">小微盘成交额研究</span><p>网页汇总暂时无法加载：{error}</p></div>;
   if (!data) return <Loading />;
-  const cleanRows = data.clean.annual.filter((row) => row.rank_count === rankCount);
-  const historicalRows = data.historical.annual.filter((row) => row.rank_count === rankCount);
-  const labels = [...new Set([...cleanRows, ...historicalRows].map((row) => String(row.year)))].sort();
-  const byYear = (rows: TurnoverAnnual[]) => new Map(rows.map((row) => [String(row.year), row.annual_median_turnover]));
-  const cleanByYear = byYear(cleanRows);
-  const historicalByYear = byYear(historicalRows);
+  const cleanRows = data.clean[granularity].filter((row) => row.rank_count === rankCount);
+  const historicalRows = data.historical[granularity].filter((row) => row.rank_count === rankCount);
+  const labelOf = (row: TurnoverPeriod | Record<string, never>) => granularity === "annual" ? String(row.year ?? "") : row.month ?? "";
+  const labels = [...new Set([...cleanRows, ...historicalRows].map(labelOf))].sort();
+  const byPeriod = (rows: TurnoverPeriod[]) => new Map(rows.map((row) => [labelOf(row), row.turnover_median]));
+  const cleanByPeriod = byPeriod(cleanRows);
+  const historicalByPeriod = byPeriod(historicalRows);
   const latestClean = cleanRows.at(-1);
   const latestHistorical = historicalRows.at(-1);
+  const periodLabel = granularity === "annual" ? "年度" : "月度";
+  const diagnosticNote = rankCount === 1 ? "N=1 是每日市值最小的一只股票，仅作极端诊断；个股切换、停牌、涨跌停和数据异常都会显著影响它，不代表可交易组合。" : "N 较大的口径更适合观察一组小市值股票的整体成交额。";
   const auditRows: Row[] = data.overlap_audit.map((row) => ({
     rank_count: String(row.rank_count),
     common_days: num(row.common_days),
@@ -176,7 +180,7 @@ function SmallcapTurnoverSection() {
     p90_diff: pct(row.p90_abs_relative_diff_turnover_median),
     within_10: pct(row.within_10pct_ratio),
   }));
-  return <><SectionHeading title="小微盘成交额研究" text="按每日总市值选取最小 N 只股票，观察日成交额的历史变化，并把清洗口径与长历史口径并列展示。"/><div className="callout compact"><span className="section-kicker">覆盖口径</span><p><strong>2015 年起清洗口径</strong>覆盖 ST、停牌和价格质量规则，标记为 verified；<strong>2008 年起历史口径</strong>时间更长，但历史源缺少可靠的 ST/停牌标记，标记为 incomplete。年度图中的值是“日成交额中位数”的年度中位数，不是累计成交额。</p></div><section className="stat-grid"><Stat label="清洗口径覆盖" value={data.clean.coverage_start + " 至 " + data.clean.coverage_end} note="主分析口径" accent/><Stat label="历史口径覆盖" value={data.historical.coverage_start + " 至 " + data.historical.coverage_end} note="质量待补强"/><Stat label={"N=" + rankCount + " · 清洗口径"} value={formatTurnover(latestClean?.annual_median_turnover ?? NaN)} note={(latestClean?.year ?? "未提供") + " 年日中位数年度中位数"}/><Stat label={"N=" + rankCount + " · 历史口径"} value={formatTurnover(latestHistorical?.annual_median_turnover ?? NaN)} note={(latestHistorical?.year ?? "未提供") + " 年日中位数年度中位数"}/></section><Panel title="最小 N 只股票的日成交额" tag="年度汇总 · 可缩放"><ControlBar><span className="control-label">股票数量</span>{data.clean.rank_counts.map((value) => <Choice key={value} active={rankCount === value} onClick={() => setRankCount(value)}>N={value}</Choice>)}</ControlBar><LineChart labels={labels} series={[{ name: "2015+ 清洗口径", values: labels.map((label) => cleanByYear.get(label) ?? null), color: "#1267d6" }, { name: "2008+ 历史口径", values: labels.map((label) => historicalByYear.get(label) ?? null), color: "#b96800" }]}/><p className="panel-note">单位为人民币成交额；图表只发布年度汇总，完整日频明细仍保留在仓库外的研究输出目录。</p></Panel><Panel title="清洗口径与历史口径的重叠审计" tag="2015-01-05 至 2026-08-21"><p className="panel-note">审计比较两套口径在共同日期上的日成交额中位数相对差异。差异来自历史口径的股票资格判定不完整，因此这张表用于识别可比边界，不代表历史口径已经完成清洗。</p><SimpleTable rows={auditRows} columns={[["rank_count", "N"], ["common_days", "共同交易日"], ["mean_diff", "平均绝对相对差异"], ["p90_diff", "P90绝对相对差异"], ["within_10", "10%以内比例"]]}/></Panel><div className="fine-print"><span className="section-kicker">研究边界</span><p>{data.caveats.join(" ")}</p></div></>;
+  return <><SectionHeading title="小微盘成交额研究" text="按每日总市值选取最小 N 只股票，观察日成交额的历史变化，并把清洗口径与长历史口径并列展示。"/><div className="callout compact"><span className="section-kicker">覆盖口径</span><p><strong>2015 年起清洗口径</strong>覆盖 ST、停牌和价格质量规则，标记为 verified；<strong>2008 年起历史口径</strong>时间更长，但历史源缺少可靠的 ST/停牌标记，标记为 incomplete。图表的年度值和月度值都是“日成交额中位数”的对应周期中位数，不是累计成交额。</p></div><section className="stat-grid"><Stat label="清洗口径覆盖" value={data.clean.coverage_start + " 至 " + data.clean.coverage_end} note="主分析口径" accent/><Stat label="历史口径覆盖" value={data.historical.coverage_start + " 至 " + data.historical.coverage_end} note="质量待补强"/><Stat label={"N=" + rankCount + " · 清洗口径"} value={formatTurnover(latestClean?.turnover_median ?? NaN)} note={labelOf(latestClean ?? {}) + " " + periodLabel + "日中位数"}/><Stat label={"N=" + rankCount + " · 历史口径"} value={formatTurnover(latestHistorical?.turnover_median ?? NaN)} note={labelOf(latestHistorical ?? {}) + " " + periodLabel + "日中位数"}/></section><Panel title="最小 N 只股票的日成交额" tag={periodLabel + "汇总 · 可缩放"}><ControlBar><span className="control-label">统计粒度</span><Choice active={granularity === "annual"} onClick={() => setGranularity("annual")}>年度汇总</Choice><Choice active={granularity === "monthly"} onClick={() => setGranularity("monthly")}>月度汇总</Choice><span className="control-label">股票数量</span>{data.clean.rank_counts.map((value) => <Choice key={value} active={rankCount === value} onClick={() => setRankCount(value)}>N={value}</Choice>)}</ControlBar><LineChart labels={labels} series={[{ name: "2015+ 清洗口径", values: labels.map((label) => cleanByPeriod.get(label) ?? null), color: "#1267d6" }, { name: "2008+ 历史口径", values: labels.map((label) => historicalByPeriod.get(label) ?? null), color: "#b96800" }]}/><p className="panel-note">{diagnosticNote} 单位为人民币成交额；网页只发布{periodLabel}汇总，完整日频明细仍保留在仓库外的研究输出目录。</p></Panel><Panel title="清洗口径与历史口径的重叠审计" tag="2015-01-05 至 2026-08-21"><p className="panel-note">审计比较两套口径在共同日期上的日成交额中位数相对差异。差异来自历史口径的股票资格判定不完整，因此这张表用于识别可比边界，不代表历史口径已经完成清洗。</p><SimpleTable rows={auditRows} columns={[["rank_count", "N"], ["common_days", "共同交易日"], ["mean_diff", "平均绝对相对差异"], ["p90_diff", "P90绝对相对差异"], ["within_10", "10%以内比例"]]}/></Panel><div className="fine-print"><span className="section-kicker">研究边界</span><p>{data.caveats.join(" ")}</p></div></>;
 }
 
 function MicrocapPage({ scope, onScopeChange }: { scope: MicrocapScope; onScopeChange: (value: MicrocapScope) => void }) {
