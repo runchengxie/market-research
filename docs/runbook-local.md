@@ -43,8 +43,8 @@ uv run market-research report microcap --config configs/local.toml
 uv run market-research report smallcap-turnover --config configs/local.toml
 ```
 
-该报告按每日总市值选取最小的 10、50、100、200、400 和 1000 只 A 股，统计成交额
-总和、均值、中位数和分位数。完整的 `smallcap_turnover_daily.csv`、摘要和 manifest
+该报告按每日总市值选取最小的 1、10、50、100、200、400 和 1000 只 A 股，统计成交额
+总和、均值、中位数和分位数。N=1 只作为极端诊断，不代表可交易组合。完整的 `smallcap_turnover_daily.csv`、摘要和 manifest
 写入配置的仓库外 `output_root`，不会自动进入 Git 或公开页面。
 
 如果需要 2008 年起的扩展版本：
@@ -65,6 +65,11 @@ uv run market-research report smallcap-turnover-audit --config configs/local.tom
 
 该命令比较共同日期和 N 分组下的成交额中位数差异，并输出 5%、10% 和 25% 误差范围
 覆盖比例。它用于发现口径变化，不把历史源提升为已验证数据。
+
+网页发布年度和月度汇总；月度值是交易日层面日成交额中位数的月度中位数。可以用以下
+命令从仓库外日频结果刷新网页快照：
+
+node web/scripts/build-smallcap-turnover-public.mjs
 
 ## 当前数据目录
 

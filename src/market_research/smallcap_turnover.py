@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import pandas as pd
 
 
-DEFAULT_RANK_COUNTS = (10, 50, 100, 200, 400, 1000)
+DEFAULT_RANK_COUNTS = (1, 10, 50, 100, 200, 400, 1000)
 
 
 def build_smallcap_turnover_stats(

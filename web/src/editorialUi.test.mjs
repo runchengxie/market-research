@@ -63,4 +63,7 @@ test("小微盘页面呈现成交额研究的覆盖与审计边界", () => {
   assert.match(source, /2008 年起历史口径/);
   assert.match(source, /重叠审计/);
   assert.match(source, /smallcap_turnover\.json/);
+  assert.match(source, /N=1/);
+  assert.match(source, /极端诊断/);
+  assert.match(source, /月度汇总/);
 });

@@ -82,12 +82,14 @@ def test_smallcap_turnover_report_writes_daily_stats_and_summary(tmp_path: Path)
     assert main(["report", "smallcap-turnover", "--config", str(config)]) == 0
     daily = pd.read_csv(tmp_path / "output" / "smallcap_turnover_daily.csv")
     assert daily[["date", "rank_count"]].to_dict("records") == [
+        {"date": "2024-01-01", "rank_count": 1},
         {"date": "2024-01-01", "rank_count": 10},
         {"date": "2024-01-01", "rank_count": 50},
         {"date": "2024-01-01", "rank_count": 100},
         {"date": "2024-01-01", "rank_count": 200},
         {"date": "2024-01-01", "rank_count": 400},
         {"date": "2024-01-01", "rank_count": 1000},
+        {"date": "2024-01-02", "rank_count": 1},
         {"date": "2024-01-02", "rank_count": 10},
         {"date": "2024-01-02", "rank_count": 50},
         {"date": "2024-01-02", "rank_count": 100},

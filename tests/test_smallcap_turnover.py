@@ -45,3 +45,14 @@ def test_smallcap_turnover_stats_rejects_invalid_rank_counts():
 
     with pytest.raises(ValueError, match="rank_counts"):
         build_smallcap_turnover_stats(_panel(), rank_counts=(0, 2))
+
+
+def test_smallcap_turnover_default_includes_single_smallest_stock():
+    from market_research.smallcap_turnover import build_smallcap_turnover_stats
+
+    result = build_smallcap_turnover_stats(_panel())
+
+    assert result["rank_count"].tolist() == [1, 10, 50, 100, 200, 400, 1000]
+    row = result.loc[result["rank_count"].eq(1)].iloc[0]
+    assert row["selected_count"] == 1
+    assert row["turnover_median"] == pytest.approx(10.0)
