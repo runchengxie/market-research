@@ -54,6 +54,45 @@ def test_barra_report_writes_summary_and_size_quantiles(tmp_path: Path):
     assert (tmp_path / "output" / "barra_size_quantiles.csv").exists()
 
 
+def test_barra_risk_input_report_writes_pit_panels(tmp_path: Path):
+    from market_research.cli import main
+
+    source = tmp_path / "a_share"
+    source.mkdir()
+    for code, prices, cap in [
+        ("000001.SZ", [10, 11, 12], 1),
+        ("000002.SZ", [20, 18, 21], 2),
+        ("000003.SZ", [30, 33, 30], 3),
+    ]:
+        pd.DataFrame(
+            {
+                "ts_code": [code] * 3,
+                "trade_date": ["2024-01-01", "2024-01-02", "2024-01-03"],
+                "close": prices,
+                "adj_close": prices,
+                "vol": [100, 100, 100],
+                "amount": [100, 100, 100],
+                "total_mv": [cap] * 3,
+                "is_st": [False] * 3,
+                "is_suspended": [False] * 3,
+            }
+        ).to_parquet(source / f"{code}.parquet", index=False)
+    config = tmp_path / "config.toml"
+    config.write_text(
+        f'output_root = "{tmp_path / "output"}"\nuse_duckdb = false\n\n'
+        f'[sources]\na_share_root = "{source}"\n\n'
+        '[barra_risk]\nfactor_columns = ["market_cap"]\nstandardize = true\n',
+        encoding="utf-8",
+    )
+
+    assert main(["report", "barra-risk-inputs", "--config", str(config)]) == 0
+    summary = json.loads((tmp_path / "output" / "barra_risk_input_summary.json").read_text())
+    assert summary["forward_return_method"] == "next_common_session_adjusted_close"
+    assert summary["observations"] == 6
+    assert (tmp_path / "output" / "barra_risk_exposures.parquet").exists()
+    assert (tmp_path / "output" / "barra_risk_returns.parquet").exists()
+
+
 def test_smallcap_turnover_report_writes_daily_stats_and_summary(tmp_path: Path):
     from market_research.cli import main
 

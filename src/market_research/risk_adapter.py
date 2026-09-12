@@ -142,9 +142,50 @@ def summarize_risk_input_coverage(inputs: AShareRiskInputs) -> dict[str, object]
     }
 
 
+def build_next_session_returns(
+    panel: pd.DataFrame,
+    *,
+    price_column: str = "adj_close",
+    date_column: str = "date",
+    symbol_column: str = "symbol",
+) -> pd.DataFrame:
+    """Build formation-date to next-common-session returns without look-ahead.
+
+    The returned ``total_return`` is labeled by the formation date. Rows are
+    retained only when the symbol has a quote on the next common panel date;
+    this makes missing next-session observations visible to coverage checks.
+    """
+
+    required = {date_column, symbol_column, price_column}
+    missing = required.difference(panel.columns)
+    if missing:
+        raise ValueError("panel missing return columns: " + ", ".join(sorted(missing)))
+    frame = panel[[date_column, symbol_column, price_column]].copy()
+    frame[date_column] = pd.to_datetime(frame[date_column], errors="coerce")
+    frame[price_column] = pd.to_numeric(frame[price_column], errors="coerce")
+    if frame[[date_column, symbol_column]].duplicated().any():
+        raise ValueError("panel contains duplicate return keys")
+    frame = frame.sort_values([symbol_column, date_column], kind="stable")
+    dates = pd.Index(sorted(frame[date_column].dropna().unique()))
+    next_dates = {dates[index]: dates[index + 1] for index in range(len(dates) - 1)}
+    frame["next_date"] = frame.groupby(symbol_column)[date_column].shift(-1)
+    frame["next_price"] = frame.groupby(symbol_column)[price_column].shift(-1)
+    frame["expected_next_date"] = frame[date_column].map(next_dates)
+    eligible = frame.loc[
+        frame[price_column].gt(0)
+        & frame["next_price"].gt(0)
+        & frame["next_date"].eq(frame["expected_next_date"])
+    ].copy()
+    eligible["total_return"] = eligible["next_price"] / eligible[price_column] - 1.0
+    return eligible[[date_column, symbol_column, "total_return"]].rename(
+        columns={date_column: "as_of_date"}
+    ).sort_values(["as_of_date", symbol_column], kind="stable").reset_index(drop=True)
+
+
 __all__ = [
     "RISK_INPUT_SCHEMA_VERSION",
     "AShareRiskInputs",
     "build_a_share_risk_inputs",
+    "build_next_session_returns",
     "summarize_risk_input_coverage",
 ]

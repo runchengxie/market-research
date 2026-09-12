@@ -10,6 +10,11 @@ from pathlib import Path
 import pandas as pd
 
 from .barra import analyze_size_monotonicity, load_barra_summary
+from .risk_adapter import (
+    build_a_share_risk_inputs,
+    build_next_session_returns,
+    summarize_risk_input_coverage,
+)
 from .style_portfolios import build_quantile_returns, summarize_market_factor_evidence
 from .studies.global_six_market.run import run_experiment as run_global_six_market
 from .markets import build_a_share_panel, build_hk_panel, build_jp_panel, build_us_panel
@@ -62,6 +67,8 @@ def _build_parser() -> argparse.ArgumentParser:
     etf_pairs.add_argument("--config", required=True)
     barra = report_subparsers.add_parser("barra")
     barra.add_argument("--config", required=True)
+    barra_risk_inputs = report_subparsers.add_parser("barra-risk-inputs")
+    barra_risk_inputs.add_argument("--config", required=True)
     style = report_subparsers.add_parser("style-factors")
     style.add_argument("--study", required=True)
     global_six = report_subparsers.add_parser("global-six-market")
@@ -381,6 +388,56 @@ def main(argv: list[str] | None = None) -> int:
                 indent=2,
             )
             + "\n",
+            encoding="utf-8",
+        )
+        return 0
+    if args.command == "report" and args.report_command == "barra-risk-inputs":
+        config = _load_config(Path(args.config))
+        sources = config.get("sources", {})
+        risk_config = config.get("barra_risk", {})
+        if not isinstance(sources, dict) or not sources.get("a_share_root"):
+            raise RuntimeError("A-share source is required for Barra risk input report")
+        if not isinstance(risk_config, dict):
+            risk_config = {}
+        a_share_root = Path(str(sources["a_share_root"]))
+        if not a_share_root.exists():
+            raise RuntimeError("configured A-share source does not exist")
+        panel, panel_metadata = build_a_share_panel(
+            a_share_root,
+            config.get("as_of") or None,
+            use_duckdb=bool(config.get("use_duckdb", False)),
+        )
+        panel = panel.copy()
+        panel["date"] = pd.to_datetime(panel["date"], errors="raise")
+        factor_columns = risk_config.get("factor_columns", ["market_cap"])
+        if not isinstance(factor_columns, list) or not factor_columns:
+            raise ValueError("barra_risk.factor_columns must be a non-empty list")
+        forward_returns = build_next_session_returns(panel)
+        risk_panel = panel.merge(
+            forward_returns,
+            left_on=["date", "symbol"],
+            right_on=["as_of_date", "symbol"],
+            how="inner",
+            validate="one_to_one",
+        )
+        industry_column = risk_config.get("industry_column")
+        if industry_column is not None and industry_column not in risk_panel.columns:
+            raise ValueError(f"configured industry column is missing: {industry_column}")
+        inputs = build_a_share_risk_inputs(
+            risk_panel,
+            factor_columns,
+            industry_column=str(industry_column) if industry_column is not None else None,
+            standardize=bool(risk_config.get("standardize", True)),
+        )
+        output_root = Path(config.get("output_root", "outputs"))
+        output_root.mkdir(parents=True, exist_ok=True)
+        inputs.exposures.to_parquet(output_root / "barra_risk_exposures.parquet")
+        inputs.returns.to_frame().to_parquet(output_root / "barra_risk_returns.parquet")
+        summary = summarize_risk_input_coverage(inputs)
+        summary["source"] = panel_metadata.as_dict()
+        summary["forward_return_method"] = "next_common_session_adjusted_close"
+        (output_root / "barra_risk_input_summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n",
             encoding="utf-8",
         )
         return 0

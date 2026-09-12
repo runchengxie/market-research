@@ -6,6 +6,7 @@ import pytest
 from market_research.risk_adapter import (
     RISK_INPUT_SCHEMA_VERSION,
     build_a_share_risk_inputs,
+    build_next_session_returns,
     summarize_risk_input_coverage,
 )
 
@@ -67,3 +68,17 @@ def test_summarize_risk_input_coverage_reports_factors_and_returns() -> None:
     assert summary["observations"] == 8
     assert summary["return_coverage"] == 1.0
     assert isinstance(inputs, AShareRiskInputs)
+
+
+def test_build_next_session_returns_labels_forward_return_on_formation_date() -> None:
+    panel = pd.DataFrame(
+        {
+            "date": ["2024-01-02", "2024-01-03", "2024-01-02", "2024-01-03"],
+            "symbol": ["A", "A", "B", "B"],
+            "adj_close": [100.0, 110.0, 100.0, 90.0],
+        }
+    )
+    returns = build_next_session_returns(panel)
+    assert returns["as_of_date"].tolist() == [pd.Timestamp("2024-01-02")] * 2
+    assert returns["symbol"].tolist() == ["A", "B"]
+    assert returns["total_return"].tolist() == pytest.approx([0.1, -0.1])
